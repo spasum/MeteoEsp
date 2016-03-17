@@ -7,7 +7,7 @@
 
 	mysql_select_db("phpmyadmin") or die("Could not select database");
 
-	$sql = "SELECT * FROM climate";
+	$sql = "SELECT * FROM climate WHERE measuredatetime < NOW() AND measuredatetime > NOW() - INTERVAL 1 HOUR";
 
 	$result = mysql_query($sql)
 		or die("Query failed : " . mysql_error());
