@@ -4,6 +4,12 @@
     padding-right: 20px;
 }
 
+.verticalPanel {
+    display: inline-block;
+    padding-right: 20px;
+    vertical-align: top;
+}
+
 #results table {
     border-collapse: collapse;
     font-family: Tahoma, serif;
@@ -131,6 +137,6 @@
 
 .chartArea {
     height: 500px;
-    width: 1200px;
+    width: 1000px;
     border: 1px solid #AAAAAA;
 }

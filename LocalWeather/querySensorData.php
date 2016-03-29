@@ -1,6 +1,6 @@
 <?php
 
-//request Module data from database
+//request Sensor data from database
 
 include_once("dbconfig.php");
 
@@ -10,7 +10,7 @@ $link = mysql_connect($databaseHost, $databaseLogin, $databasePassword)
 mysql_select_db($databaseName)
     or die("Could not select database");
 
-$query = "SELECT * FROM WeatherModule";
+$query = "SELECT * FROM WeatherSensor";
 
 $result = mysql_query($query)
     or die("Query failed: " . mysql_error());
@@ -66,7 +66,6 @@ while ($line = mysql_fetch_array($result, MYSQL_ASSOC))
 }
 
 $allData = array(
-    "fields" => $fieldsArray,
     "data" => $dataArray
 );
 
