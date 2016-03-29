@@ -7,7 +7,6 @@ const char mainMenu[] PROGMEM = "<div class='header'><ul>\
 <li><a href='/'>Home</a></li>\
 <li><a href='/setup'>Setup</a></li>\
 <li><a href='/time'>Setup Time</a></li>\
-<li><a href='/pins'>Setup Pins</a></li>\
 <li><a class='reboot' href='/reboot?reboot_delay=10'>Reboot</a></li>\
 </ul></div>";
 

@@ -6,12 +6,17 @@
 #include <ESP8266WiFi.h>
 #include <IPAddress.h>
 
+#define VALUE_TEMP 0
+#define VALUE_HUMIDITY 1
+#define VALUE_PRESSURE 2
+#define VALUE_ILLUMINATION 3
+
 int getRowY(int row, int fontHeight);
 String twoDigits(int value);
 String getDateTimeString(DateTime now);
 IPAddress stringToIp(String strIp);
 bool isIPValid(const char * IP);
-String floatToString(float f, int digits = 4, int decimals = 1);
+String floatToString(float f, int valueType, int digits = 4, int decimals = 1);
 String getUptimeData();
 String getFreeMemory();
 String getIpString(IPAddress ip);

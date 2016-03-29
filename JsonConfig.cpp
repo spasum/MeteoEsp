@@ -4,7 +4,7 @@ bool JsonConfig::printConfig()
 {
     Serial.println("\r\nConfig: printing");
 
-    Serial.print(F("sensor_id     : "));   Serial.println(sensor_id);
+    Serial.print(F("module_id     : "));   Serial.println(module_id);
     Serial.print(F("module_name   : "));   Serial.println(module_name);
     Serial.print(F("sta_ssid      : "));   Serial.println(sta_ssid);
     Serial.print(F("sta_pwd       : "));   Serial.println(sta_pwd);
@@ -18,6 +18,11 @@ bool JsonConfig::printConfig()
     Serial.print(F("reboot_delay  : "));   Serial.println(reboot_delay);
 
     Serial.print(F("add_data_url  : "));   Serial.println(add_data_url);
+
+    Serial.print(F("sensor_bmp180_on  : "));   Serial.println(sensor_bmp180_on);
+    Serial.print(F("sensor_dht22_on   : "));   Serial.println(sensor_dht22_on);
+    Serial.print(F("sensor_sht21_on   : "));   Serial.println(sensor_sht21_on);
+    Serial.print(F("sensor_bh1750_on  : "));   Serial.println(sensor_bh1750_on);
 
     Serial.println("\r\nConfig: printed");
 
@@ -63,7 +68,7 @@ bool JsonConfig::loadConfig()
         return false;
     }
 
-    if (json.containsKey("sensor_id")) { const char* sensor_id_char = json["sensor_id"]; sprintf_P(sensor_id, ("%s"), sensor_id_char); }
+    if (json.containsKey("module_id")) { const char* module_id_char = json["module_id"]; sprintf_P(module_id, ("%s"), module_id_char); }
     if (json.containsKey("module_name")) { const char* module_name_char = json["module_name"]; sprintf_P(module_name, ("%s"), module_name_char); }
     if (json.containsKey("sta_ssid")) { const char* sta_ssid_char = json["sta_ssid"]; sprintf_P(sta_ssid, ("%s"), sta_ssid_char); }
     if (json.containsKey("sta_pwd")) { const char* sta_pwd_char = json["sta_pwd"]; sprintf_P(sta_pwd, ("%s"), sta_pwd_char); }
@@ -77,6 +82,11 @@ bool JsonConfig::loadConfig()
     if (json.containsKey("reboot_delay")) { const char* reboot_delay_char = json["reboot_delay"]; sprintf_P(reboot_delay, ("%s"), reboot_delay_char); }
 
     if (json.containsKey("add_data_url")) { const char* add_data_url_char = json["add_data_url"]; sprintf_P(add_data_url, ("%s"), add_data_url_char); }
+
+    if (json.containsKey("sensor_bmp180_on")) { const char* sensor_bmp180_on_char = json["sensor_bmp180_on"]; sprintf_P(sensor_bmp180_on, ("%s"), sensor_bmp180_on_char); }
+    if (json.containsKey("sensor_dht22_on")) { const char* sensor_dht22_on_char = json["sensor_dht22_on"]; sprintf_P(sensor_dht22_on, ("%s"), sensor_dht22_on_char); }
+    if (json.containsKey("sensor_sht21_on")) { const char* sensor_sht21_on_char = json["sensor_sht21_on"]; sprintf_P(sensor_sht21_on, ("%s"), sensor_sht21_on_char); }
+    if (json.containsKey("sensor_bh1750_on")) { const char* sensor_bh1750_on_char = json["sensor_bh1750_on"]; sprintf_P(sensor_bh1750_on, ("%s"), sensor_bh1750_on_char); }
 
     configFile.close();
 
@@ -98,7 +108,7 @@ bool JsonConfig::saveConfig()
         return false;
     }
 
-    json["sensor_id"] = sensor_id;
+    json["module_id"] = module_id;
     json["module_name"] = module_name;
     json["sta_ssid"] = sta_ssid;
     json["sta_pwd"] = sta_pwd;
@@ -112,6 +122,11 @@ bool JsonConfig::saveConfig()
     json["reboot_delay"] = reboot_delay;
 
     json["add_data_url"] = add_data_url;
+
+    json["sensor_bmp180_on"] = sensor_bmp180_on;
+    json["sensor_dht22_on"] = sensor_dht22_on;
+    json["sensor_sht21_on"] = sensor_sht21_on;
+    json["sensor_bh1750_on"] = sensor_bh1750_on;
 
     json.printTo(configFile);
     configFile.close();

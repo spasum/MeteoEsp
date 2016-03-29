@@ -108,13 +108,26 @@ bool isIPValid(const char * IP)
     return true;
 }
 
-String floatToString(float f, int digits, int decimals)
+String floatToString(float f, int valueType, int digits, int decimals)
 {
     if (isnan(f) || f == 0.0 || f < 0.0)
     {
         return "-";
     }
-    char c[5];
+    if (valueType == VALUE_TEMP)
+    {
+        if (f > 70) return "-";
+    }
+    if (valueType == VALUE_HUMIDITY)
+    {
+        if (f > 100) return "-";
+    }
+    if (valueType == VALUE_ILLUMINATION)
+    {
+        if (f > 50000) return "-";
+    }
+
+    char c[10];
     dtostrf(f, digits, decimals, c);
     return String(c);
 }

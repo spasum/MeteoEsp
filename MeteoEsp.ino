@@ -7,12 +7,21 @@
 #include <SFE_BMP180.h>
 #include <Wire.h>
 #include <RTClib.h>
+#include <SparkFunHTU21D.h>
+#include <BH1750.h>
 
 #include "JsonConfig.h"
 #include "WebCommon.h"
 #include "Common.h"
 
 RTC_DS1307 rtc;
+
+BH1750 lightMeter;
+uint16_t lightness;
+String lightnessStr;
+
+HTU21D sht21;
+SensorData data3;
 
 ESP8266WebServer WebServer(80);
 const int maxConnectAttempts = 20;
@@ -22,11 +31,11 @@ JsonConfig config;
 #define DHTPIN 12
 #define DHTTYPE DHT22
 DHT dht22(DHTPIN, DHTTYPE);
-DhtData data1;
+SensorData data1;
 
 SFE_BMP180 bmp180;
 #define ALTITUDE 20 //meters
-BmpData data2;
+SensorData data2;
 
 extern uint8_t BigFont[];
 UTFT myGLCD(ILI9341_S5P, 15, 5, 4);
@@ -37,6 +46,8 @@ const int valueX = 140;
 
 bool bmp180initialized = false;
 bool dht22initialized = false;
+bool rtcInitialized = false;
+bool meetWithServer = false;
 
 unsigned long previousMillis = 0;
 bool isRebooting = false;
@@ -48,10 +59,18 @@ void renderWiFiStatus(String status, int r, int g, int b);
 void renderServerStatus(String status, int r, int g, int b);
 void renderAPStatus(String status, int r, int g, int b);
 
+bool isRtcInitialized()
+{
+    return rtcInitialized && rtc.isrunning();
+}
+
 void renderDateTime()
 {
     myGLCD.setColor(255, 255, 0);
-    myGLCD.print(getDateTimeString(rtc.now()), 1, getRowY(7, fontHeight));
+    if (isRtcInitialized())
+        myGLCD.print(getDateTimeString(rtc.now()), 1, getRowY(7, fontHeight));
+    else
+        myGLCD.print("RTC Off", 1, getRowY(7, fontHeight));
     myGLCD.setColor(0, 255, 0);
 }
 
@@ -104,12 +123,24 @@ void webRoot()
         "<div class='row'><div class='label'>Module IP:</div><div class='value'>" + getIpString(WiFi.localIP()) + "</div></div>" +
         "<div class='row'><div class='label'>Module Name:</div><div class='value'>" + config.module_name + "</div></div>" +
         "<div class='row'><div class='label'>Module MAC:</div><div class='value'>" + getMacString() + "</div></div>" +
-        "<div class='row'><div class='label'>Time:</div><div class='value'>" + getDateTimeString(rtc.now()) + "</div></div>" +
+
+        "<div class='row'><div class='label'>Time:</div><div class='value'>" + (isRtcInitialized() ? getDateTimeString(rtc.now()) : "-") + "</div></div>" +
         "<div class='row'><div class='label'>Uptime:</div><div class='value'>" + getUptimeData() + "</div></div>" +
+
         "<div class='row'><div class='label'>Temp 1, C:</div><div class='value'>" + data1.tempStr + "</div></div>" +
+        "<div class='row'><div class='label'>RH 1, %:</div><div class='value'>" + data1.humidityStr + "</div></div>" +
+        "<div class='row'><div class='label'>Pressure 1, mmHg:</div><div class='value'>" + data1.pressureStr + "</div></div>" +
+
         "<div class='row'><div class='label'>Temp 2, C:</div><div class='value'>" + data2.tempStr + "</div></div>" +
-        "<div class='row'><div class='label'>Humidity, %:</div><div class='value'>" + data1.humidityStr + "</div></div>" +
-        "<div class='row'><div class='label'>Pressure, mmHg:</div><div class='value'>" + data2.pressureStr + "</div></div>" +
+        "<div class='row'><div class='label'>RH 2, %:</div><div class='value'>" + data2.humidityStr + "</div></div>" +
+        "<div class='row'><div class='label'>Pressure 2, mmHg:</div><div class='value'>" + data2.pressureStr + "</div></div>" +
+
+        "<div class='row'><div class='label'>Temp 3, C:</div><div class='value'>" + data3.tempStr + "</div></div>" +
+        "<div class='row'><div class='label'>RH 3, %:</div><div class='value'>" + data3.humidityStr + "</div></div>" +
+        "<div class='row'><div class='label'>Pressure 3, mmHg:</div><div class='value'>" + data3.pressureStr + "</div></div>" +
+
+        "<div class='row'><div class='label'>Illumination, lx:</div><div class='value'>" + lightnessStr + "</div></div>" +
+
         "<div class='row'><div class='label'>Free memory:</div><div class='value'>" + getFreeMemory() + "</div></div>" +
         "</div>" +
         FPSTR(bodyEnd)
@@ -123,10 +154,10 @@ void webSetup()
     Serial.println("\r\nServer: request SETUP");
 
     bool config_changed = false;
-    String payload = WebServer.arg("sensor_id");
+    String payload = WebServer.arg("module_id");
     if (payload.length() > 0)
     {
-        payload.toCharArray(config.sensor_id, sizeof(config.sensor_id));
+        payload.toCharArray(config.module_id, sizeof(config.module_id));
         config_changed = true;
     }
     payload = WebServer.arg("module_name");
@@ -153,6 +184,7 @@ void webSetup()
         payload.toCharArray(config.add_data_url, sizeof(config.add_data_url));
         config_changed = true;
     }
+
     payload = WebServer.arg("static_ip_mode");
     if (payload.length() > 0)
     {
@@ -178,19 +210,53 @@ void webSetup()
         config_changed = true;
     }
 
+    payload = WebServer.arg("sensor_bmp180_on");
+    if (payload.length() > 0)
+    {
+        payload.toCharArray(config.sensor_bmp180_on, sizeof(config.sensor_bmp180_on));
+        config_changed = true;
+    }
+    payload = WebServer.arg("sensor_dht22_on");
+    if (payload.length() > 0)
+    {
+        payload.toCharArray(config.sensor_dht22_on, sizeof(config.sensor_dht22_on));
+        config_changed = true;
+    }
+    payload = WebServer.arg("sensor_sht21_on");
+    if (payload.length() > 0)
+    {
+        payload.toCharArray(config.sensor_sht21_on, sizeof(config.sensor_sht21_on));
+        config_changed = true;
+    }
+    payload = WebServer.arg("sensor_bh1750_on");
+    if (payload.length() > 0)
+    {
+        payload.toCharArray(config.sensor_bh1750_on, sizeof(config.sensor_bh1750_on));
+        config_changed = true;
+    }
+
     WebServer.send(200, "text/html", String("") +
         FPSTR(headStart) + FPSTR(styles) + FPSTR(scripts) + FPSTR(headEnd) + FPSTR(bodyStart) + FPSTR(mainMenu) +
         "<h2>Module Setup</h2>" +
         "<div class='container'>" +
-        "<div class='row'><div class='label'>Sensor ID:</div><div class='value'><input type='text' id='sensor_id' value='" + config.sensor_id + "' /></div></div>" +
+        "<div class='row'><div class='label'>Module ID:</div><div class='value'><input type='text' id='module_id' value='" + config.module_id + "' /></div></div>" +
         "<div class='row'><div class='label'>Module Name:</div><div class='value'><input type='text' id='module_name' value='" + config.module_name + "' /></div></div>" +
+
         "<div class='row'><div class='label'>SSID:</div><div class='value'><input type='text' id='sta_ssid' value='" + config.sta_ssid + "' /></div></div>" +
         "<div class='row'><div class='label'>Password:</div><div class='value'><input type='text' id='sta_pwd' value='" + config.sta_pwd + "' /></div></div>" +
+
         "<div class='row'><div class='label'>Static IP Mode:</div><div class='value'><input type='text' id='static_ip_mode' value='" + config.static_ip_mode + "' /></div></div>" +
         "<div class='row'><div class='label'>Static IP:</div><div class='value'><input type='text' id='static_ip' value='" + config.static_ip + "' /></div></div>" +
         "<div class='row'><div class='label'>Gateway:</div><div class='value'><input type='text' id='static_gateway' value='" + config.static_gateway + "' /></div></div>" +
         "<div class='row'><div class='label'>Subnet:</div><div class='value'><input type='text' id='static_subnet' value='" + config.static_subnet + "' /></div></div>" +
+
         "<div class='row'><div class='label'>Add Data URL:</div><div class='value'><input type='text' id='add_data_url' value='" + config.add_data_url + "' /></div></div>" +
+
+        "<div class='row'><div class='label'>BMP180 On:</div><div class='value'><input type='text' id='sensor_bmp180_on' value='" + config.sensor_bmp180_on + "' /></div></div>" +
+        "<div class='row'><div class='label'>DHT22 On:</div><div class='value'><input type='text' id='sensor_dht22_on' value='" + config.sensor_dht22_on + "' /></div></div>" +
+        "<div class='row'><div class='label'>SHT21 On:</div><div class='value'><input type='text' id='sensor_sht21_on' value='" + config.sensor_sht21_on + "' /></div></div>" +
+        "<div class='row'><div class='label'>BH1750 On:</div><div class='value'><input type='text' id='sensor_bh1750_on' value='" + config.sensor_bh1750_on + "' /></div></div>" +
+
         "<div class='footer'><input type='button' value='Save' onclick='saveFormData(\"/setup\");'/></div>" +
         "</div>" +
         FPSTR(bodyEnd)
@@ -202,13 +268,6 @@ void webSetup()
     }
 
     Serial.println("Server: request SETUP sent");
-}
-
-void webPins()
-{
-    Serial.println("\r\nServer: request PINS");
-    WebServer.send(200, "text/html", "Pins");
-    Serial.println("Server: request PINS sent");
 }
 
 void webReboot()
@@ -316,7 +375,6 @@ void initWebServer()
     WebServer.on("/", webRoot);
     WebServer.on("/setup", webSetup);
     WebServer.on("/time", webTime);
-    WebServer.on("/pins", webPins);
     WebServer.on("/reboot", webReboot);
     WebServer.onNotFound(handleNotFound);
     WebServer.begin();
@@ -424,6 +482,9 @@ void initWiFi()
     {
         Serial.println(String("Wifi: connected, creating AP ") + config.module_name);
         WiFi.softAP(config.module_name);
+        Serial.print("Wifi: connected, IP = ");
+        Serial.print(WiFi.localIP());
+        Serial.println();
     }
     else
     {
@@ -455,6 +516,10 @@ void initSensors()
     {
         bmp180initialized = true;
     }
+
+    sht21.begin();
+
+    lightMeter.begin();
 }
 
 void initLcd()
@@ -471,6 +536,10 @@ void initRtc()
   if (!rtc.begin())
   {
     Serial.println("RTC: couldn't find");
+  }
+  else
+  {
+    rtcInitialized = true;
   }
 
   if (!rtc.isrunning())
@@ -514,17 +583,35 @@ void setup()
     Serial.println("\r\nStarting complete.");
 }
 
-DhtData getDHTData()
+SensorData getSht21Data()
 {
-    float h = dht22.readHumidity();
-    float t = dht22.readTemperature();
-    DhtData data;
+    float h = sht21.readHumidity();
+    float t = sht21.readTemperature();
+    SensorData data;
     data.humidity = h;
     data.temp = t;
+    data.pressure = 0;
     return data;
 }
 
-BmpData getBmp180Data()
+SensorData getDht22Data()
+{
+    float h = dht22.readHumidity();
+    float t = dht22.readTemperature();
+    SensorData data;
+    data.humidity = h;
+    data.temp = t;
+    data.pressure = 0;
+    return data;
+}
+
+uint16_t getLightness()
+{
+    uint16_t lux = lightMeter.readLightLevel();
+    return lux;
+}
+
+SensorData getBmp180Data()
 {
     char status;
     double T, P, p0, a;
@@ -588,9 +675,13 @@ BmpData getBmp180Data()
         }
     }
 
-    BmpData data;
-    data.temp = T;
-    data.pressure = p0;
+    SensorData data;
+    if (bmp180initialized)
+    {
+        data.temp = T;
+        data.pressure = p0;
+        data.humidity = 0;
+    }    
     return data;
 }
 
@@ -628,23 +719,54 @@ void renderAPStatus(String status, int r, int g, int b)
 
 void renderSensorValues()
 {
-    data1 = getDHTData();
-    data1.tempStr = floatToString(data1.temp);
-    data1.humidityStr = floatToString(data1.humidity);
-    renderRowValue(data1.tempStr, 3);
-    renderRowValue(data1.humidityStr, 4);
-    Serial.println(String("Temp 1   : " + data1.tempStr));
-    Serial.println(String("Humidity : " + data1.humidityStr));
+    if (atoi(config.sensor_dht22_on) == 1)
+    {
+        data1 = getDht22Data();
+        data1.tempStr = floatToString(data1.temp, VALUE_TEMP);
+        data1.humidityStr = floatToString(data1.humidity, VALUE_HUMIDITY);
+        data1.pressureStr = floatToString(data1.pressure * 0.0295333727 * 25.4, VALUE_PRESSURE, 3, 0);
+        renderRowValue(data1.tempStr, 3);
+        renderRowValue(data1.humidityStr, 4);
+        Serial.println(String("Temp 1    : " + data1.tempStr));
+        Serial.println(String("RH 1      : " + data1.humidityStr));
+        Serial.println(String("Pressure 1: " + data1.pressureStr));
+    }
 
-    data2 = getBmp180Data();
-    data2.tempStr = floatToString(data2.temp);
-    data2.pressureStr = floatToString(data2.pressure * 0.0295333727 * 25.4, 3, 0);
-    renderRowValue(data2.pressureStr, 5);
-    renderRowValue(data2.tempStr, 6);
-    Serial.println(String("Pressure : " + data2.pressureStr));
-    Serial.println(String("Temp 2   : " + data2.tempStr));
+    if (atoi(config.sensor_bmp180_on) == 1)
+    {
+        data2 = getBmp180Data();
+        data2.tempStr = floatToString(data2.temp, VALUE_TEMP);
+        data2.humidityStr = floatToString(data2.humidity, VALUE_HUMIDITY);
+        data2.pressureStr = floatToString(data2.pressure * 0.0295333727 * 25.4, VALUE_PRESSURE, 3, 0);
+        renderRowValue(data2.pressureStr, 5);
+        renderRowValue(data2.tempStr, 6);
+        Serial.println(String("Temp 2    : " + data2.tempStr));
+        Serial.println(String("RH 2      : " + data2.humidityStr));
+        Serial.println(String("Pressure 2: " + data2.pressureStr));
+    }
 
-    Serial.println(String("RTC: ") + getDateTimeString(rtc.now()));
+    if (atoi(config.sensor_sht21_on) == 1)
+    {
+        data3 = getSht21Data();
+        data3.tempStr = floatToString(data3.temp, VALUE_TEMP);
+        data3.humidityStr = floatToString(data3.humidity, VALUE_HUMIDITY);
+        data3.pressureStr = floatToString(data3.pressure * 0.0295333727 * 25.4, VALUE_PRESSURE, 3, 0);
+        Serial.println(String("Temp 3    : " + data3.tempStr));
+        Serial.println(String("RH 3      : " + data3.humidityStr));
+        Serial.println(String("Pressure 3: " + data3.pressureStr));
+    }
+
+    if (atoi(config.sensor_bh1750_on) == 1)
+    {
+        lightness = getLightness();
+        lightnessStr = floatToString(lightness, VALUE_ILLUMINATION, 5, 0);
+        Serial.println(String("Light     : " + lightnessStr));
+    }
+
+    if (isRtcInitialized())
+        Serial.println(String("RTC       : ") + getDateTimeString(rtc.now()));
+    else
+        Serial.println("RTC       : -");
 }
 
 void parseServerResponse(String payload)
@@ -658,6 +780,12 @@ void parseServerResponse(String payload)
     int minutes = root["minute"];
     int seconds = root["second"];
     Serial.println(String("HTTPClient: server time ") + hours + ":" + minutes + ":" + seconds);
+
+    if (!isRtcInitialized())
+    {
+        Serial.println("HTTPClient: RTC off, skip setting time");
+        return;
+    }
 
     DateTime now = rtc.now();
     int years1 = now.year();
@@ -675,17 +803,55 @@ void parseServerResponse(String payload)
     }
 }
 
+float getTempForJson(float value)
+{
+    return (isnan(value) || value > 70) ? 0 : value;
+}
+
+float getPressureForJson(float value)
+{
+    return isnan(value) ? 0 : value;
+}
+
+float getHumidityForJson(float value)
+{
+    return (isnan(value) || value > 100) ? 0 : value;
+}
+
+float getIlluminationForJson(float value)
+{
+    return (isnan(value) || value > 50000) ? 0 : value;
+}
+
 String getSensorsDataJson()
 {
     StaticJsonBuffer<1024> jsonBuffer;
     JsonObject& json = jsonBuffer.createObject();
 
-    json["sensorid"] = atoi(config.sensor_id);
+    json["moduleid"] = atoi(config.module_id);
     json["modulename"] = config.module_name;
-    json["temperature1"] = data1.temp;
-    json["temperature2"] = data2.temp;
-    json["humidity"] = data1.humidity;
-    json["pressure"] = data2.pressure;
+
+    json["temperature1"] = getTempForJson(data1.temp);
+    json["humidity1"] = getHumidityForJson(data1.humidity);
+    json["pressure1"] = getPressureForJson(data1.pressure);
+
+    json["temperature2"] = getTempForJson(data2.temp);
+    json["humidity2"] = getHumidityForJson(data2.humidity);
+    json["pressure2"] = getPressureForJson(data2.pressure);
+
+    json["temperature3"] = getTempForJson(data3.temp);
+    json["humidity3"] = getHumidityForJson(data3.humidity);
+    json["pressure3"] = getPressureForJson(data3.pressure);
+
+    json["illumination"] = getIlluminationForJson(lightness);
+
+    //send handshake and info about module
+    if (!meetWithServer)
+    {
+        json["meet"] = 1;
+        json["ip"] = getIpString(WiFi.localIP());
+        json["mac"] = getMacString();
+    }
 
     char buffer[2048];
     json.printTo(buffer, sizeof(buffer));
