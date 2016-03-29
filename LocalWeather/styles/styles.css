@@ -1,0 +1,136 @@
+
+.pageContainer {
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+#results table {
+    border-collapse: collapse;
+    font-family: Tahoma, serif;
+    font-size: 12px;
+}
+
+#results th {
+    background-color: #CCCCCC;
+    cursor: pointer;
+}
+
+#results td {
+    cursor: default;
+}
+
+#results td a {
+    color: black;
+}
+
+#results td, #results th {
+    border: 1px solid #AAAAAA;
+    height: 30px;
+    white-space: nowrap;
+    padding-left: 3px;
+    padding-right: 3px;
+    text-align: center;
+    font-weight: normal;
+}
+
+#results tr {
+    background-color: white;
+}
+
+#results tr:nth-child(2n) {
+    background-color: #EDF1F2;
+}
+
+#results tr:hover {
+    background-color: #CCCCCC;
+}
+
+.pager {
+    height: 38px;
+    width: 40px;
+    border: 1px solid #aaa;
+    display: inline-block;
+    margin: 5px !important;
+    text-align: center;
+    background-color: #EDF1F2;
+    padding-top: 10px;
+    font-family: Tahoma, serif;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.pager:hover {
+    background-color: #CCCCCC;
+}
+
+.pagerDescription {
+    height: 24px;
+    padding-top: 10px;
+    font-family: Tahoma, serif;
+    font-size: 12px;
+    display: inline-block;
+    margin: 5px;
+    text-align: center;
+}
+
+.chartController {
+    height: 24px;
+    padding-top: 10px;
+    font-family: Tahoma, serif;
+    font-size: 12px;
+    margin: 5px;
+}
+
+.selectedPage {
+    background-color: #CCCCCC;
+    font-weight: bold;
+}
+
+.sortedColumn {
+    font-weight: bold !important;
+}
+
+.colorWhite {
+    background-color: white !important;
+}
+
+.colorRed {
+    background-color: #FFDDDD !important;
+}
+
+.colorOrange {
+    background-color: #FFEEDB !important;
+}
+
+.colorYellow {
+    background-color: #FDFFE4 !important;
+}
+
+.colorBlue {
+    background-color: #DEFFFE !important;
+}
+
+.colorGreen {
+    background-color: #DDFFDC !important;
+}
+
+.actionbutton {
+    width: 20px;
+    height: 20px;
+    border: 1px solid gray;
+    display: inline-block;
+    float: right;
+    margin-bottom: -10px;
+    margin-top: -4px;
+    margin-right: 5px;
+    cursor: pointer;
+    background-repeat: no-repeat;
+    background-position: -6px -6px;
+}
+
+.chartArea {
+    height: 500px;
+    width: 1200px;
+    border: 1px solid #AAAAAA;
+}
