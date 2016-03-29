@@ -38,7 +38,7 @@ while ($i < mysql_num_fields($result))
 
 while ($line = mysql_fetch_array($result, MYSQL_ASSOC))
 {
-    $moduleData = (object)[];
+    $sensorData = (object)[];
     $i = 0;
     foreach ($line as $col_value)
     {
@@ -47,22 +47,22 @@ while ($line = mysql_fetch_array($result, MYSQL_ASSOC))
 
         if ($col_value == null)
         {
-            $moduleData->$columnName = null;
+            $sensorData->$columnName = null;
         }
         else {
             if ($columnType == "string")
-                $moduleData->$columnName = iconv('windows-1251', 'utf-8', $col_value);
+                $sensorData->$columnName = iconv('windows-1251', 'utf-8', $col_value);
             if ($columnType == "real")
-                $moduleData->$columnName = (float)$col_value;
+                $sensorData->$columnName = (float)$col_value;
             if ($columnType == "int")
-                $moduleData->$columnName = (int)$col_value;
+                $sensorData->$columnName = (int)$col_value;
             if ($columnType == "timestamp")
-                $moduleData->$columnName = $col_value;
+                $sensorData->$columnName = $col_value;
         }
 
         $i++;
     }
-    array_push($dataArray, $moduleData);
+    array_push($dataArray, $sensorData);
 }
 
 $allData = array(

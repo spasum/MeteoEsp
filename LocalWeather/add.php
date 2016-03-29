@@ -106,7 +106,7 @@ if ($meet)
         else
         {
             $sql = "INSERT INTO WeatherModule (ModuleID, ModuleName, IP, MAC) VALUES ($moduleid, '$modulename', '$ip', '$mac')";
-            $result = mysql_query($sql);
+            mysql_query($sql);
         }
     }
     catch (Exception $e)

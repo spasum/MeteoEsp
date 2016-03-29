@@ -3,17 +3,16 @@ var queryHelper = new function() {
 
     var thisRef = this;
 
-    function requestSensorData(params, callback) {
+    function request(url, params, callback) {
         var request = $.ajax({
-            url: "querySensorData.php",
+            url: url,
             type: "post",
-            data: {
-            }
+            data: params
         });
 
         request.done(function (response){
-            var sensorsData = JSON.parse(response);
-            callback(sensorsData);
+            var payload = JSON.parse(response);
+            callback(payload);
         });
 
         // Callback handler that will be called on failure
@@ -23,62 +22,25 @@ var queryHelper = new function() {
                 textStatus, errorThrown
             );
         });
+    }
+
+    function updateSensorData(params, callback) {
+        request("updateSensorData.php", params, callback);
+    }
+    thisRef.updateSensorData = updateSensorData;
+
+    function requestSensorData(params, callback) {
+        request("querySensorData.php", params, callback);
     }
     thisRef.requestSensorData = requestSensorData;
 
     function requestModuleData(params, callback) {
-        var request = $.ajax({
-            url: "queryModuleData.php",
-            type: "post",
-            data: {
-            }
-        });
-
-        request.done(function (response){
-            var moduleData = JSON.parse(response);
-            callback(moduleData);
-        });
-
-        // Callback handler that will be called on failure
-        request.fail(function (jqXHR, textStatus, errorThrown){
-            console.error(
-                "The following error occurred: " +
-                textStatus, errorThrown
-            );
-        });
+        request("queryModuleData.php", params, callback);
     }
     thisRef.requestModuleData = requestModuleData;
 
     function requestWeatherData(params, callback) {
-        var request = $.ajax({
-            url: "queryWeatherData.php",
-            type: "post",
-            data: {
-                sortBy: params.sortBy,
-                sortAscending: params.sortAscending,
-                pageSize: params.pageSize,
-                pageIndex: params.pageIndex,
-                queryType: params.queryType,
-                interval: params.interval
-            }
-        });
-
-        request.done(function (response){
-            var weatherData = JSON.parse(response);
-            for (var i = 0; i < weatherData.data.length; i++) {
-                weatherData.data[i].MeasuredDateTime = new Date(weatherData.data[i].MeasuredDateTime);
-            }
-            callback(weatherData);
-        });
-
-        // Callback handler that will be called on failure
-        request.fail(function (jqXHR, textStatus, errorThrown){
-            console.error(
-                "The following error occurred: " +
-                textStatus, errorThrown
-            );
-        });
+        request("queryWeatherData.php", params, callback);
     }
     thisRef.requestWeatherData = requestWeatherData;
-
 };
