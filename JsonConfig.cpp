@@ -24,6 +24,12 @@ bool JsonConfig::printConfig()
     Serial.print(F("sensor_sht21_on   : "));   Serial.println(sensor_sht21_on);
     Serial.print(F("sensor_bh1750_on  : "));   Serial.println(sensor_bh1750_on);
 
+    Serial.print(F("rtc_on            : "));   Serial.println(rtc_on);
+    Serial.print(F("use_server_time   : "));   Serial.println(use_server_time);
+    Serial.print(F("use_ntp_server    : "));   Serial.println(use_ntp_server);
+    Serial.print(F("ntp_server        : "));   Serial.println(ntp_server);
+    Serial.print(F("time_zone_offset  : "));   Serial.println(time_zone_offset);
+
     Serial.println("\r\nConfig: printed");
 
     return true;
@@ -88,6 +94,12 @@ bool JsonConfig::loadConfig()
     if (json.containsKey("sensor_sht21_on")) { const char* sensor_sht21_on_char = json["sensor_sht21_on"]; sprintf_P(sensor_sht21_on, ("%s"), sensor_sht21_on_char); }
     if (json.containsKey("sensor_bh1750_on")) { const char* sensor_bh1750_on_char = json["sensor_bh1750_on"]; sprintf_P(sensor_bh1750_on, ("%s"), sensor_bh1750_on_char); }
 
+    if (json.containsKey("rtc_on")) { const char* rtc_on_char = json["rtc_on"]; sprintf_P(rtc_on, ("%s"), rtc_on_char); }
+    if (json.containsKey("use_server_time")) { const char* use_server_time_char = json["use_server_time"]; sprintf_P(use_server_time, ("%s"), use_server_time_char); }
+    if (json.containsKey("use_ntp_server")) { const char* use_ntp_server_char = json["use_ntp_server"]; sprintf_P(use_ntp_server, ("%s"), use_ntp_server_char); }
+    if (json.containsKey("ntp_server")) { const char* ntp_server_char = json["ntp_server"]; sprintf_P(ntp_server, ("%s"), ntp_server_char); }
+    if (json.containsKey("time_zone_offset")) { const char* time_zone_offset_char = json["time_zone_offset"]; sprintf_P(time_zone_offset, ("%s"), time_zone_offset_char); }
+
     configFile.close();
 
     Serial.println("Config: loaded");
@@ -127,6 +139,12 @@ bool JsonConfig::saveConfig()
     json["sensor_dht22_on"] = sensor_dht22_on;
     json["sensor_sht21_on"] = sensor_sht21_on;
     json["sensor_bh1750_on"] = sensor_bh1750_on;
+
+    json["rtc_on"] = rtc_on;
+    json["use_server_time"] = use_server_time;
+    json["use_ntp_server"] = use_ntp_server;
+    json["ntp_server"] = ntp_server;
+    json["time_zone_offset"] = time_zone_offset;
 
     json.printTo(configFile);
     configFile.close();

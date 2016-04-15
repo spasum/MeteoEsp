@@ -4,28 +4,27 @@ include_once("dbconfig.php");
 
 function getParam($object, $name)
 {
-	if (isset($object[$name]) && !empty($object[$name]))
-		return $object[$name];
-	return null;
+    if (isset($object[$name]) && !empty($object[$name]))
+        return $object[$name];
+    return null;
 }
 
 function valueOrNull($value)
 {
-	if ($value == 0)
-		return 'null';
-	return $value;
+    if ($value == 0)
+        return 'null';
+    return $value;
 }
 
 $id = 0;
 $input = file_get_contents('php://input');
 
-if (empty($input))
-{
-	$data = array(
-		'error' => 'Please use JSON to add data.'
-	);
-	print json_encode($data);
-	return;
+if (empty($input)) {
+    $data = array(
+        'error' => 'Please use JSON to add data.'
+    );
+    print json_encode($data);
+    return;
 }
 
 $object = json_decode($input, true);
@@ -52,65 +51,52 @@ $pressure3 = valueOrNull((float)getParam($object, "pressure3"));
 $illumination = valueOrNull((float)getParam($object, "illumination"));
 
 if ($moduleid == 0) {
-	$data = array(
-		'error' => 'Wrong module ID.'
-	);
-	print json_encode($data);
-	return;
+    $data = array(
+        'error' => 'Wrong module ID.'
+    );
+    print json_encode($data);
+    return;
 }
 
-try
-{
-	$link = mysql_connect($databaseHost, $databaseLogin, $databasePassword);
-}
-catch (Exception $e)
-{
-	$data = array(
-		'error' => mysql_error()
-	);
-	print json_encode($data);
-	return;
+try {
+    $link = mysql_connect($databaseHost, $databaseLogin, $databasePassword);
+} catch (Exception $e) {
+    $data = array(
+        'error' => mysql_error()
+    );
+    print json_encode($data);
+    return;
 }
 
 $sql = "INSERT INTO WeatherData (ModuleID, ModuleName, Temperature1, Temperature2, Temperature3, Humidity1, Humidity2, Humidity3, Pressure1, Pressure2, Pressure3, Illumination) VALUES ($moduleid, '$modulename', $temperature1, $temperature2, $temperature3, $humidity1, $humidity2, $humidity3, $pressure1, $pressure2, $pressure3, $illumination)";
-try
-{
-	mysql_select_db($databaseName);
-	mysql_query($sql);
-	$id = mysql_insert_id();
-}
-catch (Exception $e)
-{
-	$data = array(
-		'error' => mysql_error()
-	);
-	print json_encode($data);
-	return;
+try {
+    mysql_select_db($databaseName);
+    mysql_query($sql);
+    $id = mysql_insert_id();
+} catch (Exception $e) {
+    $data = array(
+        'error' => mysql_error()
+    );
+    print json_encode($data);
+    return;
 }
 
-if ($meet)
-{
-    try
-    {
+if ($meet) {
+    try {
         $sql = "SELECT COUNT(*) as Total FROM WeatherModule where MAC = '$mac'";
         $result = mysql_query($sql);
         $moduleData = mysql_fetch_assoc($result);
         $moduleExists = $moduleData["Total"] == 1;
         mysql_free_result($result);
 
-        if ($moduleExists)
-        {
-            $sql = "UPDATE WeatherModule SET IP = '$ip', ModuleName = '$modulename', ModuleID = $moduleid LastSeenDateTime = CURRENT_TIMESTAMP WHERE MAC = '$mac'";
+        if ($moduleExists) {
+            $sql = "UPDATE WeatherModule SET IP = '$ip', ModuleName = '$modulename', ModuleID = $moduleid, LastSeenDateTime = CURRENT_TIMESTAMP WHERE MAC = '$mac'";
             mysql_query($sql);
-        }
-        else
-        {
+        } else {
             $sql = "INSERT INTO WeatherModule (ModuleID, ModuleName, IP, MAC) VALUES ($moduleid, '$modulename', '$ip', '$mac')";
             mysql_query($sql);
         }
-    }
-    catch (Exception $e)
-    {
+    } catch (Exception $e) {
         $data = array(
             'error' => mysql_error()
         );
@@ -119,27 +105,26 @@ if ($meet)
     }
 }
 
-date_default_timezone_set('Europe/Kaliningrad');
 $data = array(
-	'id' => $id,
-	'moduleid' => $moduleid,
-	'modulename' => $modulename,
-	'temperature1' => $temperature1,
-	'temperature2' => $temperature2,
-	'temperature3' => $temperature3,
-	'humidity1' => $humidity1,
-	'humidity2' => $humidity2,
-	'humidity3' => $humidity3,
-	'pressure1' => $pressure1,
-	'pressure2' => $pressure2,
-	'pressure3' => $pressure3,
-	'illumination' => $illumination,
-	'year' => (int)date('Y'),
-	'month' => (int)date('m'),
-	'day' => (int)date('d'),
-	'hour' => (int)date('H'),
-	'minute' => (int)date('i'),
-	'second' => (int)date('s')
+    'id' => $id,
+    'moduleid' => $moduleid,
+    'modulename' => $modulename,
+    'temperature1' => $temperature1,
+    'temperature2' => $temperature2,
+    'temperature3' => $temperature3,
+    'humidity1' => $humidity1,
+    'humidity2' => $humidity2,
+    'humidity3' => $humidity3,
+    'pressure1' => $pressure1,
+    'pressure2' => $pressure2,
+    'pressure3' => $pressure3,
+    'illumination' => $illumination,
+    'year' => (int)date('Y'),
+    'month' => (int)date('m'),
+    'day' => (int)date('d'),
+    'hour' => (int)date('H'),
+    'minute' => (int)date('i'),
+    'second' => (int)date('s')
 );
 
 print json_encode($data);

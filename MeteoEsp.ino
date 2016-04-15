@@ -27,6 +27,8 @@ ESP8266WebServer WebServer(80);
 const int maxConnectAttempts = 20;
 
 JsonConfig config;
+#define MAX_WIFI_COUNT 50
+WiFiData wiFiDatas[MAX_WIFI_COUNT];
 
 #define DHTPIN 12
 #define DHTTYPE DHT22
@@ -47,7 +49,6 @@ const int valueX = 140;
 bool bmp180initialized = false;
 bool dht22initialized = false;
 bool rtcInitialized = false;
-bool meetWithServer = false;
 
 unsigned long previousMillis = 0;
 bool isRebooting = false;
@@ -58,10 +59,11 @@ const int ONE_SECOND = 1000;
 void renderWiFiStatus(String status, int r, int g, int b);
 void renderServerStatus(String status, int r, int g, int b);
 void renderAPStatus(String status, int r, int g, int b);
+void scanWiFi();
 
 bool isRtcInitialized()
 {
-    return rtcInitialized && rtc.isrunning();
+    return (atoi(config.rtc_on) == 1) && rtcInitialized && rtc.isrunning();
 }
 
 void renderDateTime()
@@ -70,7 +72,7 @@ void renderDateTime()
     if (isRtcInitialized())
         myGLCD.print(getDateTimeString(rtc.now()), 1, getRowY(7, fontHeight));
     else
-        myGLCD.print("RTC Off", 1, getRowY(7, fontHeight));
+        myGLCD.print("RTC Off            ", 1, getRowY(7, fontHeight));
     myGLCD.setColor(0, 255, 0);
 }
 
@@ -116,36 +118,34 @@ void webRoot()
 {
     Serial.println("\r\nServer: request ROOT");
 
-    WebServer.send(200, "text/html", String("") +
-        FPSTR(headStart) + FPSTR(styles) + FPSTR(scripts) + FPSTR(headEnd) + FPSTR(bodyStart) + FPSTR(mainMenu) +
-        "<h2>Welcome to " + config.module_name + "</h2>" +
-        "<div class='container'>" +
-        "<div class='row'><div class='label'>Module IP:</div><div class='value'>" + getIpString(WiFi.localIP()) + "</div></div>" +
-        "<div class='row'><div class='label'>Module Name:</div><div class='value'>" + config.module_name + "</div></div>" +
-        "<div class='row'><div class='label'>Module MAC:</div><div class='value'>" + getMacString() + "</div></div>" +
+    String data = 
+        renderTitle(config.module_name, "Home") + FPSTR(stylesInclude) + FPSTR(scripts) + FPSTR(headEnd) + FPSTR(bodyStart) + FPSTR(mainMenu) +
+        String(F("<h2>Welcome to ")) + config.module_name + String(F("</h2>")) +
+        String(F("<div class='container'>")) +
+        renderParameterRow("Module ID", "", config.module_id, true) + 
+        renderParameterRow("Module Name", "", config.module_name, true) + 
+        renderParameterRow("Module IP", "", getIpString(WiFi.localIP()), true) + 
+        renderParameterRow("Module MAC", "", getMacString(), true) + 
+        "<hr/>" +
+        renderParameterRow("Module Time", "", (isRtcInitialized() ? getDateTimeString(rtc.now()) : "-"), true) + 
+        renderParameterRow("Uptime", "", getUptimeData(), true) + 
+        "<hr/>" +
+        renderParameterRow("Temp 1, C", "", data1.tempStr, true) + 
+        renderParameterRow("RH 1, %", "", data1.humidityStr, true) + 
+        renderParameterRow("Pressure 1, mmHg", "", data1.pressureStr, true) + 
+        renderParameterRow("Temp 2, C", "", data2.tempStr, true) + 
+        renderParameterRow("RH 2, %", "", data2.humidityStr, true) + 
+        renderParameterRow("Pressure 2, mmHg", "", data2.pressureStr, true) + 
+        renderParameterRow("Temp 3, C", "", data3.tempStr, true) + 
+        renderParameterRow("RH 3, %", "", data3.humidityStr, true) + 
+        renderParameterRow("Pressure 3, mmHg", "", data3.pressureStr, true) + 
+        "<hr/>" +
+        renderParameterRow("Illumination, lx", "", lightnessStr, true) + 
+        renderParameterRow("Free memory, bytes", "", getFreeMemory(), true) + 
+        String(F("</div>")) +
+        FPSTR(bodyEnd);
 
-        "<div class='row'><div class='label'>Time:</div><div class='value'>" + (isRtcInitialized() ? getDateTimeString(rtc.now()) : "-") + "</div></div>" +
-        "<div class='row'><div class='label'>Uptime:</div><div class='value'>" + getUptimeData() + "</div></div>" +
-
-        "<div class='row'><div class='label'>Temp 1, C:</div><div class='value'>" + data1.tempStr + "</div></div>" +
-        "<div class='row'><div class='label'>RH 1, %:</div><div class='value'>" + data1.humidityStr + "</div></div>" +
-        "<div class='row'><div class='label'>Pressure 1, mmHg:</div><div class='value'>" + data1.pressureStr + "</div></div>" +
-
-        "<div class='row'><div class='label'>Temp 2, C:</div><div class='value'>" + data2.tempStr + "</div></div>" +
-        "<div class='row'><div class='label'>RH 2, %:</div><div class='value'>" + data2.humidityStr + "</div></div>" +
-        "<div class='row'><div class='label'>Pressure 2, mmHg:</div><div class='value'>" + data2.pressureStr + "</div></div>" +
-
-        "<div class='row'><div class='label'>Temp 3, C:</div><div class='value'>" + data3.tempStr + "</div></div>" +
-        "<div class='row'><div class='label'>RH 3, %:</div><div class='value'>" + data3.humidityStr + "</div></div>" +
-        "<div class='row'><div class='label'>Pressure 3, mmHg:</div><div class='value'>" + data3.pressureStr + "</div></div>" +
-
-        "<div class='row'><div class='label'>Illumination, lx:</div><div class='value'>" + lightnessStr + "</div></div>" +
-
-        "<div class='row'><div class='label'>Free memory:</div><div class='value'>" + getFreeMemory() + "</div></div>" +
-        "</div>" +
-        FPSTR(bodyEnd)
-        );
-    
+    WebServer.send(200, "text/html", data);    
     Serial.println("Server: request ROOT sent");
 }
 
@@ -210,7 +210,55 @@ void webSetup()
         config_changed = true;
     }
 
-    payload = WebServer.arg("sensor_bmp180_on");
+    scanWiFi();
+
+    String ssids;
+    for (int i = 0; i < MAX_WIFI_COUNT; i++)
+    {
+        if (wiFiDatas[i].isSet)
+            ssids += renderSsid(wiFiDatas[i]);
+    }
+
+    String data = 
+        renderTitle(config.module_name, "Setup") + FPSTR(stylesInclude) + FPSTR(scripts) + FPSTR(headEnd) + FPSTR(bodyStart) + FPSTR(mainMenu) +
+        "<h2>Module Setup</h2>" +
+        "<div class='container'>" +
+        renderParameterRow("Module ID", "module_id", config.module_id) + 
+        renderParameterRow("Module Name", "module_name", config.module_name) + 
+        "<hr/>" +
+        "<div class='container_ssids'><h4>Available Networks:</h4>" +
+        ssids +
+        "</div>" +
+        renderParameterRow("SSID", "sta_ssid", config.sta_ssid) + 
+        renderParameterRow("Password", "sta_pwd", config.sta_pwd, false, true) + 
+        "<hr/>" +
+        renderParameterRow("Static IP Mode", "static_ip_mode", config.static_ip_mode) + 
+        renderParameterRow("Static IP", "static_ip", config.static_ip) + 
+        renderParameterRow("Gateway", "static_gateway", config.static_gateway) + 
+        renderParameterRow("Subnet", "static_subnet", config.static_subnet) + 
+        "<hr/>" +
+        renderParameterRow("Add Data URL", "add_data_url", config.add_data_url) + 
+        "<hr/>" +
+        "<a class='btn btn-default marginTop0' role='button' onclick='saveFormData(\"/setup\");'>Save</a>" +
+        "</div>" +
+        FPSTR(bodyEnd);
+
+    WebServer.send(200, "text/html", data);
+
+    if (config_changed)
+    {
+        config.saveConfig();
+    }
+
+    Serial.println("Server: request SETUP sent");
+}
+
+void webSensors()
+{
+    Serial.println("\r\nServer: request SENSORS");
+
+    bool config_changed = false;
+    String payload = WebServer.arg("sensor_bmp180_on");
     if (payload.length() > 0)
     {
         payload.toCharArray(config.sensor_bmp180_on, sizeof(config.sensor_bmp180_on));
@@ -235,53 +283,56 @@ void webSetup()
         config_changed = true;
     }
 
-    WebServer.send(200, "text/html", String("") +
-        FPSTR(headStart) + FPSTR(styles) + FPSTR(scripts) + FPSTR(headEnd) + FPSTR(bodyStart) + FPSTR(mainMenu) +
-        "<h2>Module Setup</h2>" +
+    String data = 
+        renderTitle(config.module_name, "Setup") + FPSTR(stylesInclude) + FPSTR(scripts) + FPSTR(headEnd) + FPSTR(bodyStart) + FPSTR(mainMenu) +
+        "<h2>Module Sensors</h2>" +
         "<div class='container'>" +
-        "<div class='row'><div class='label'>Module ID:</div><div class='value'><input type='text' id='module_id' value='" + config.module_id + "' /></div></div>" +
-        "<div class='row'><div class='label'>Module Name:</div><div class='value'><input type='text' id='module_name' value='" + config.module_name + "' /></div></div>" +
-
-        "<div class='row'><div class='label'>SSID:</div><div class='value'><input type='text' id='sta_ssid' value='" + config.sta_ssid + "' /></div></div>" +
-        "<div class='row'><div class='label'>Password:</div><div class='value'><input type='text' id='sta_pwd' value='" + config.sta_pwd + "' /></div></div>" +
-
-        "<div class='row'><div class='label'>Static IP Mode:</div><div class='value'><input type='text' id='static_ip_mode' value='" + config.static_ip_mode + "' /></div></div>" +
-        "<div class='row'><div class='label'>Static IP:</div><div class='value'><input type='text' id='static_ip' value='" + config.static_ip + "' /></div></div>" +
-        "<div class='row'><div class='label'>Gateway:</div><div class='value'><input type='text' id='static_gateway' value='" + config.static_gateway + "' /></div></div>" +
-        "<div class='row'><div class='label'>Subnet:</div><div class='value'><input type='text' id='static_subnet' value='" + config.static_subnet + "' /></div></div>" +
-
-        "<div class='row'><div class='label'>Add Data URL:</div><div class='value'><input type='text' id='add_data_url' value='" + config.add_data_url + "' /></div></div>" +
-
-        "<div class='row'><div class='label'>BMP180 On:</div><div class='value'><input type='text' id='sensor_bmp180_on' value='" + config.sensor_bmp180_on + "' /></div></div>" +
-        "<div class='row'><div class='label'>DHT22 On:</div><div class='value'><input type='text' id='sensor_dht22_on' value='" + config.sensor_dht22_on + "' /></div></div>" +
-        "<div class='row'><div class='label'>SHT21 On:</div><div class='value'><input type='text' id='sensor_sht21_on' value='" + config.sensor_sht21_on + "' /></div></div>" +
-        "<div class='row'><div class='label'>BH1750 On:</div><div class='value'><input type='text' id='sensor_bh1750_on' value='" + config.sensor_bh1750_on + "' /></div></div>" +
-
-        "<div class='footer'><input type='button' value='Save' onclick='saveFormData(\"/setup\");'/></div>" +
+        renderParameterRow("BMP180 On", "sensor_bmp180_on", config.sensor_bmp180_on) + 
+        renderParameterRow("DHT22 On", "sensor_dht22_on", config.sensor_dht22_on) + 
+        renderParameterRow("SHT21 On", "sensor_sht21_on", config.sensor_sht21_on) + 
+        renderParameterRow("BH1750 On", "sensor_bh1750_on", config.sensor_bh1750_on) + 
+        "<hr/>" +
+        "<a class='btn btn-default marginTop0' role='button' onclick='saveFormData(\"/sensors\");'>Save</a>" +
         "</div>" +
-        FPSTR(bodyEnd)
-        );
+        FPSTR(bodyEnd);
+
+    WebServer.send(200, "text/html", data);
 
     if (config_changed)
     {
         config.saveConfig();
     }
 
-    Serial.println("Server: request SETUP sent");
+    Serial.println("Server: request SENSORS sent");
 }
 
 void webReboot()
 {
     Serial.println("\r\nServer: request REBOOT");
 
-    WebServer.send(200, "text/html", String("") +
-        FPSTR(headStart) + FPSTR(styles) + FPSTR(rebootScripts) + FPSTR(scripts) + FPSTR(headEnd) + FPSTR(bodyStart) + FPSTR(mainMenu) +
-        "<h2 id='info'>Module Reboot in " + config.reboot_delay + " sec(s)</h2>" +
-        FPSTR(bodyEnd)
-        );
+    String data =
+        renderTitle(config.module_name, "Reboot") + 
+        renderStyles(String("") + FPSTR(styles) + FPSTR(stylesBootstrapAlerts)) +
+        FPSTR(rebootScripts) + FPSTR(scripts) + FPSTR(headEnd) + FPSTR(bodyStart) + FPSTR(mainMenu) +
+        renderAlert("info", String("<strong id='info'>Module will reboot in ") + config.reboot_delay + " second(s).</strong>") +
+        FPSTR(bodyEnd);
+
+    WebServer.send(200, "text/html", data);
 
     Serial.println("Server: request REBOOT sent");
+
+    delay(1000);
     rebootESP();
+}
+
+void webStyles()
+{
+    Serial.println("\r\nServer: request STYLES");
+
+    String stylesText = String("") + FPSTR(styles) + FPSTR(stylesBootstrap) + FPSTR(stylesBootstrapAlerts);
+    WebServer.send(200, "text/css", stylesText);
+
+    Serial.println("Server: request STYLES sent");
 }
 
 void webTime()
@@ -297,6 +348,8 @@ void webTime()
     int seconds = now.second();
 
     bool time_changed = false;
+    bool config_changed = false;
+
     String payload = WebServer.arg("year");
     if (payload.length() > 0)
     {
@@ -332,27 +385,71 @@ void webTime()
     {
         seconds = atoi(payload.c_str());
         time_changed = true;
-    }    
+    }
 
-    WebServer.send(200, "text/html", String("") +
-        FPSTR(headStart) + FPSTR(styles) + FPSTR(scripts) + FPSTR(headEnd) + FPSTR(bodyStart) + FPSTR(mainMenu) +
-        "<h2>Setting Module Time</h2>" +
+    payload = WebServer.arg("rtc_on");
+    if (payload.length() > 0)
+    {
+        payload.toCharArray(config.rtc_on, sizeof(config.rtc_on));
+        config_changed = true;
+    }
+    payload = WebServer.arg("use_server_time");
+    if (payload.length() > 0)
+    {
+        payload.toCharArray(config.use_server_time, sizeof(config.use_server_time));
+        config_changed = true;
+    }
+    payload = WebServer.arg("use_ntp_server");
+    if (payload.length() > 0)
+    {
+        payload.toCharArray(config.use_ntp_server, sizeof(config.use_ntp_server));
+        config_changed = true;
+    }
+    payload = WebServer.arg("ntp_server");
+    if (payload.length() > 0)
+    {
+        payload.toCharArray(config.ntp_server, sizeof(config.ntp_server));
+        config_changed = true;
+    }
+    payload = WebServer.arg("time_zone_offset");
+    if (payload.length() > 0)
+    {
+        payload.toCharArray(config.time_zone_offset, sizeof(config.time_zone_offset));
+        config_changed = true;
+    }
+
+    String data =
+        renderTitle(config.module_name, "Setup Time") + FPSTR(stylesInclude) + FPSTR(scripts) + FPSTR(headEnd) + FPSTR(bodyStart) + FPSTR(mainMenu) +
+        "<h2>Module Time</h2>" +
         "<div class='container'>" +
-        "<div class='row'><div class='label'>Year:</div><div class='value'><input type='text' id='year' value='" + years + "' /></div></div>" +
-        "<div class='row'><div class='label'>Month:</div><div class='value'><input type='text' id='month' value='" + months + "' /></div></div>" +
-        "<div class='row'><div class='label'>Day:</div><div class='value'><input type='text' id='day' value='" + days + "' /></div></div>" +
-        "<div class='row'><div class='label'>Hour:</div><div class='value'><input type='text' id='hour' value='" + hours + "' /></div></div>" +
-        "<div class='row'><div class='label'>Minute:</div><div class='value'><input type='text' id='minute' value='" + minutes + "' /></div></div>" +
-        "<div class='row'><div class='label'>Second:</div><div class='value'><input type='text' id='second' value='" + seconds + "' /></div></div>" +
-        "<div class='footer'><input type='button' value='Save' onclick='saveFormData(\"/time\");'/></div>" +
+        renderParameterRow("RTC On", "rtc_on", config.rtc_on, false) + 
+        renderParameterRow("Use Server Time", "use_server_time", config.use_server_time) + 
+        renderParameterRow("Use NTP Server", "use_ntp_server", config.use_ntp_server) + 
+        renderParameterRow("NTP Server", "ntp_server", config.ntp_server) + 
+        renderParameterRow("Timezone Offset", "time_zone_offset", config.time_zone_offset) + 
+        "<hr/>" +
+        renderParameterRow("Year", "year", String(years)) + 
+        renderParameterRow("Month", "month", String(months)) + 
+        renderParameterRow("Day", "day", String(days)) + 
+        renderParameterRow("Hour", "hour", String(hours)) + 
+        renderParameterRow("Minute", "minute", String(minutes)) + 
+        renderParameterRow("Second", "second", String(seconds)) + 
+        "<hr/>" +
+        "<a class='btn btn-default marginTop0' role='button' onclick='saveFormData(\"/time\");'>Save</a>" +
         "</div>" +
-        FPSTR(bodyEnd)
-        );
+        FPSTR(bodyEnd);
+
+    WebServer.send(200, "text/html", data);
 
     if (time_changed)
     {
         Serial.println("Server: setting new TIME");
         rtc.adjust(DateTime(years, months, days, hours, minutes, seconds));
+    }
+
+    if (config_changed)
+    {
+        config.saveConfig();
     }
 
     Serial.println("Server: request TIME sent");
@@ -362,11 +459,12 @@ void handleNotFound()
 {
     Serial.println("\r\nServer: not found");
 
-    WebServer.send(404, "text/html", String("") +
-        FPSTR(headStart) + FPSTR(styles) + FPSTR(headEnd) + FPSTR(bodyStart) + FPSTR(mainMenu) +
-        "<h2 id='info'>Page " + WebServer.uri() + ", arguments " + WebServer.args() + " not found.</h2>" +
-        FPSTR(bodyEnd)
-        );
+    String data =
+        renderTitle(config.module_name, "Page not found") + FPSTR(stylesInclude) + FPSTR(headEnd) + FPSTR(bodyStart) + FPSTR(mainMenu) +
+        renderAlert("danger", String("Page <strong>") + WebServer.uri() + "</strong> not found.") +
+        FPSTR(bodyEnd);
+
+    WebServer.send(404, "text/html", data);
 }
 
 void initWebServer()
@@ -376,9 +474,47 @@ void initWebServer()
     WebServer.on("/setup", webSetup);
     WebServer.on("/time", webTime);
     WebServer.on("/reboot", webReboot);
+    WebServer.on("/sensors", webSensors);
+    WebServer.on("/styles.css", webStyles);
     WebServer.onNotFound(handleNotFound);
     WebServer.begin();
     Serial.println("Server: started");
+}
+
+void scanWiFi()
+{
+    Serial.println("WiFi: scan start");  
+
+    for (int i = 0; i < MAX_WIFI_COUNT; i++)
+    {
+        wiFiDatas[i].isSet = false;
+    }
+
+    int founds = WiFi.scanNetworks();
+    
+    Serial.println("WiFi: scan done");
+  
+    if (founds == 0)
+    {
+        Serial.println("WiFi: no networks found");
+    }
+    else
+    {
+        Serial.print("WiFi: ");
+        Serial.print(founds);
+        Serial.println(F(" networks found"));
+        for (size_t i = 0; i < founds; ++i)
+        {
+            // Print SSID and RSSI for each network found
+            Serial.print(i + 1);  Serial.print(F(": "));  Serial.print(WiFi.SSID(i));  Serial.print(F(" ("));  Serial.print(WiFi.RSSI(i));  Serial.print(F(" dBm)"));
+            Serial.println((WiFi.encryptionType(i) == ENC_TYPE_NONE) ? F(" ") : F("*"));
+            wiFiDatas[i].ssid = WiFi.SSID(i);
+            wiFiDatas[i].rssi = WiFi.RSSI(i);
+            wiFiDatas[i].encryptionType = WiFi.encryptionType(i);
+            wiFiDatas[i].isSet = true;
+            delay(10);
+        }
+    }
 }
 
 int connectWiFi()
@@ -412,40 +548,42 @@ void handleWiFiEvent(WiFiEvent_t event)
 {
     switch (event)
     {
-    case WIFI_EVENT_STAMODE_CONNECTED:
-        Serial.println("Wifi event: WIFI_EVENT_STAMODE_CONNECTED");
-        renderWiFiStatus("Linking", 255, 255, 0);
-        break;
-    case WIFI_EVENT_STAMODE_DISCONNECTED:
-        Serial.println("Wifi event: WIFI_EVENT_STAMODE_DISCONNECTED");
-        renderWiFiStatus("Off", 255, 0, 0);
-        break;
-    case WIFI_EVENT_STAMODE_AUTHMODE_CHANGE:
-        Serial.println("Wifi event: WIFI_EVENT_STAMODE_AUTHMODE_CHANGE");
-        break;
-    case WIFI_EVENT_STAMODE_GOT_IP:
-        Serial.println("Wifi event: WIFI_EVENT_STAMODE_GOT_IP");
-        Serial.print("Wifi: connected, IP = ");
-        Serial.print(WiFi.localIP());
-        Serial.println();
-        renderWiFiStatus("On", 255, 255, 255);
-        break;
-    case WIFI_EVENT_STAMODE_DHCP_TIMEOUT:
-        Serial.println("Wifi event: WIFI_EVENT_STAMODE_DHCP_TIMEOUT");
-        break;
-    case WIFI_EVENT_SOFTAPMODE_STACONNECTED:
-        Serial.println("Wifi event: WIFI_EVENT_SOFTAPMODE_STACONNECTED");
-        renderAPStatus("Connected", 255, 255, 255);
-        break;
-    case WIFI_EVENT_SOFTAPMODE_STADISCONNECTED:
-        Serial.println("Wifi event: WIFI_EVENT_SOFTAPMODE_STADISCONNECTED");
-        renderAPStatus("Off", 255, 255, 255);
-        break;
-    case WIFI_EVENT_SOFTAPMODE_PROBEREQRECVED:
-        break;
-    case WIFI_EVENT_MAX:
-        Serial.println("Wifi event: WIFI_EVENT_MAX");
-        break;
+        case WIFI_EVENT_STAMODE_CONNECTED:
+            Serial.println("Wifi event: WIFI_EVENT_STAMODE_CONNECTED");
+            renderWiFiStatus("Linking", 255, 255, 0);
+            break;
+        case WIFI_EVENT_STAMODE_DISCONNECTED:
+            Serial.println("Wifi event: WIFI_EVENT_STAMODE_DISCONNECTED");
+            renderWiFiStatus("Off", 255, 0, 0);
+            break;
+        case WIFI_EVENT_STAMODE_AUTHMODE_CHANGE:
+            Serial.println("Wifi event: WIFI_EVENT_STAMODE_AUTHMODE_CHANGE");
+            break;
+        case WIFI_EVENT_STAMODE_GOT_IP:
+            Serial.println("Wifi event: WIFI_EVENT_STAMODE_GOT_IP");
+            Serial.print("Wifi: connected, IP = ");
+            Serial.print(WiFi.localIP());
+            Serial.print(", MAC = ");
+            Serial.print(getMacString());
+            Serial.println();
+            renderWiFiStatus("On", 255, 255, 255);
+            break;
+        case WIFI_EVENT_STAMODE_DHCP_TIMEOUT:
+            Serial.println("Wifi event: WIFI_EVENT_STAMODE_DHCP_TIMEOUT");
+            break;
+        case WIFI_EVENT_SOFTAPMODE_STACONNECTED:
+            Serial.println("Wifi event: WIFI_EVENT_SOFTAPMODE_STACONNECTED");
+            renderAPStatus("Connected", 255, 255, 255);
+            break;
+        case WIFI_EVENT_SOFTAPMODE_STADISCONNECTED:
+            Serial.println("Wifi event: WIFI_EVENT_SOFTAPMODE_STADISCONNECTED");
+            renderAPStatus("Off", 255, 255, 255);
+            break;
+        case WIFI_EVENT_SOFTAPMODE_PROBEREQRECVED:
+            break;
+        case WIFI_EVENT_MAX:
+            Serial.println("Wifi event: WIFI_EVENT_MAX");
+            break;
     }
 }
 
@@ -773,33 +911,40 @@ void parseServerResponse(String payload)
 {
     StaticJsonBuffer<2048> jsonBuffer;
     JsonObject& root = jsonBuffer.parseObject(payload.c_str());
-    int years = root["year"];
-    int months = root["month"];
-    int days = root["day"];
-    int hours = root["hour"];
-    int minutes = root["minute"];
-    int seconds = root["second"];
-    Serial.println(String("HTTPClient: server time ") + hours + ":" + minutes + ":" + seconds);
 
-    if (!isRtcInitialized())
+    if (atoi(config.use_server_time) == 1)
     {
-        Serial.println("HTTPClient: RTC off, skip setting time");
-        return;
-    }
-
-    DateTime now = rtc.now();
-    int years1 = now.year();
-    int months1 = now.month();
-    int days1 = now.day();
-    int hours1 = now.hour();
-    int minutes1 = now.minute();
-    int seconds1 = now.second();
-
-    if (years1 != years || months1 != months || days1 != days || hours1 != hours || minutes1 != minutes || seconds1 != seconds)
-    {
-        //set server time
-        Serial.println("HTTPClient: set server time");
-        rtc.adjust(DateTime(years, months, days, hours, minutes, seconds));
+        int years = root["year"];
+        int months = root["month"];
+        int days = root["day"];
+        int hours = root["hour"];
+        int minutes = root["minute"];
+        int seconds = root["second"];
+    
+        char value_buff[120];
+        sprintf_P(value_buff, (const char *)F("HTTPClient: server time %02d:%02d:%02d"), hours, minutes, seconds);
+        Serial.println(value_buff);
+    
+        if (!isRtcInitialized())
+        {
+            Serial.println("HTTPClient: RTC off, skip setting time");
+            return;
+        }
+    
+        DateTime now = rtc.now();
+        int years1 = now.year();
+        int months1 = now.month();
+        int days1 = now.day();
+        int hours1 = now.hour();
+        int minutes1 = now.minute();
+        int seconds1 = now.second();
+    
+        if (years1 != years || months1 != months || days1 != days || hours1 != hours || minutes1 != minutes || seconds1 != seconds)
+        {
+            //set server time
+            Serial.println("HTTPClient: set server time");
+            rtc.adjust(DateTime(years, months, days, hours, minutes, seconds));
+        }
     }
 }
 
@@ -845,13 +990,9 @@ String getSensorsDataJson()
 
     json["illumination"] = getIlluminationForJson(lightness);
 
-    //send handshake and info about module
-    if (!meetWithServer)
-    {
-        json["meet"] = 1;
-        json["ip"] = getIpString(WiFi.localIP());
-        json["mac"] = getMacString();
-    }
+    json["meet"] = 1;
+    json["ip"] = getIpString(WiFi.localIP());
+    json["mac"] = getMacString();
 
     char buffer[2048];
     json.printTo(buffer, sizeof(buffer));
@@ -923,4 +1064,5 @@ void loop()
         }
     }
 }
+
 

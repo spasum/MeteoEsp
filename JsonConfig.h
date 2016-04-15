@@ -18,6 +18,15 @@ public:
     String pressureStr;
 };
 
+class WiFiData
+{
+public:
+    String ssid;
+    long rssi;
+    byte encryptionType;
+    bool isSet;
+};
+
 class JsonConfig
 {
 public:
@@ -42,6 +51,12 @@ public:
     char sensor_dht22_on[32] = "1";
     char sensor_sht21_on[32] = "1";
     char sensor_bh1750_on[32] = "1";
+
+    char rtc_on[32] = "1";
+    char use_server_time[32] = "1";
+    char use_ntp_server[32] = "0";
+    char ntp_server[32] = "europe.pool.ntp.org";
+    char time_zone_offset[32] = "0";
 
     char add_data_url[32] = "http://note4me.ru/add.php";
 

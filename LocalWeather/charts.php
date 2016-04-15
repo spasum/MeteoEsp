@@ -2,10 +2,13 @@
 <html>
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>Домашняя метеостанция - Графики</title>
     <link rel="stylesheet" href="styles/styles.css" type="text/css" />
     <link rel="stylesheet" href="styles/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="styles/jquery.dropdown.min.css" type="text/css" />
     <link rel="stylesheet" href="styles/bootstrap-theme.min.css" type="text/css" />
+    <link rel="stylesheet" href="styles/font-awesome.css" type="text/css" />
+    <link rel="stylesheet" href="styles/awesome-bootstrap-checkbox.css" type="text/css" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js" type="text/javascript"></script>
     <script src="http://code.highcharts.com/highcharts.js" type="text/javascript"></script>
     <script src="scripts/CommonUtil.js" type="text/javascript"></script>
@@ -63,7 +66,7 @@
 
         <hr/>
 
-        <ul class="list-group" id="sensorsList"></ul>
+        <div id="sensorsList"></div>
 
     </div>
     <div class="verticalPanel">

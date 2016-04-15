@@ -10,6 +10,28 @@
     vertical-align: top;
 }
 
+.fieldsContainer {
+    width: 300px;
+}
+
+.floatRight {
+    float: right;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.moduleWidget {
+    width: 360px !important;
+}
+
+.brandImage {
+    margin-top: -15px;
+    height: 50px;
+    width: 50px;
+}
+
 #results table {
     border-collapse: collapse;
     font-family: Tahoma, serif;

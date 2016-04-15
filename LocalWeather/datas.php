@@ -2,6 +2,7 @@
 <html>
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>Домашняя метеостанция - Данные</title>
     <link rel="stylesheet" href="styles/styles.css" type="text/css" />
     <link rel="stylesheet" href="styles/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="styles/jquery.dropdown.min.css" type="text/css" />

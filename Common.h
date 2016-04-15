@@ -12,7 +12,6 @@
 #define VALUE_ILLUMINATION 3
 
 int getRowY(int row, int fontHeight);
-String twoDigits(int value);
 String getDateTimeString(DateTime now);
 IPAddress stringToIp(String strIp);
 bool isIPValid(const char * IP);
