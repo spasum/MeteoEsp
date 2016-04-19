@@ -32,9 +32,9 @@ $object = json_decode($input, true);
 $moduleid = (int)getParam($object, "moduleid");
 $modulename = getParam($object, "modulename");
 
-$meet = (int)getParam($object, "meet") == 1;
 $ip = getParam($object, "ip");
 $mac = getParam($object, "mac");
+$delay = (int)getParam($object, "delay");
 
 $temperature1 = valueOrNull((float)getParam($object, "temperature1"));
 $humidity1 = valueOrNull((float)getParam($object, "humidity1"));
@@ -81,28 +81,26 @@ try {
     return;
 }
 
-if ($meet) {
-    try {
-        $sql = "SELECT COUNT(*) as Total FROM WeatherModule where MAC = '$mac'";
-        $result = mysql_query($sql);
-        $moduleData = mysql_fetch_assoc($result);
-        $moduleExists = $moduleData["Total"] == 1;
-        mysql_free_result($result);
+try {
+    $sql = "SELECT COUNT(*) as Total FROM WeatherModule where MAC = '$mac'";
+    $result = mysql_query($sql);
+    $moduleData = mysql_fetch_assoc($result);
+    $moduleExists = $moduleData["Total"] == 1;
+    mysql_free_result($result);
 
-        if ($moduleExists) {
-            $sql = "UPDATE WeatherModule SET IP = '$ip', ModuleName = '$modulename', ModuleID = $moduleid, LastSeenDateTime = CURRENT_TIMESTAMP WHERE MAC = '$mac'";
-            mysql_query($sql);
-        } else {
-            $sql = "INSERT INTO WeatherModule (ModuleID, ModuleName, IP, MAC) VALUES ($moduleid, '$modulename', '$ip', '$mac')";
-            mysql_query($sql);
-        }
-    } catch (Exception $e) {
-        $data = array(
-            'error' => mysql_error()
-        );
-        print json_encode($data);
-        return;
+    if ($moduleExists) {
+        $sql = "UPDATE WeatherModule SET IP = '$ip', ModuleName = '$modulename', ModuleID = $moduleid, SensorDelay = $delay, LastSeenDateTime = CURRENT_TIMESTAMP WHERE MAC = '$mac'";
+        mysql_query($sql);
+    } else {
+        $sql = "INSERT INTO WeatherModule (ModuleID, ModuleName, IP, MAC, SensorDelay) VALUES ($moduleid, '$modulename', '$ip', '$mac', $delay)";
+        mysql_query($sql);
     }
+} catch (Exception $e) {
+    $data = array(
+        'error' => mysql_error()
+    );
+    print json_encode($data);
+    return;
 }
 
 $data = array(

@@ -9,6 +9,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js" type="text/javascript"></script>
     <script src="scripts/CommonUtil.js" type="text/javascript"></script>
     <script src="scripts/queryHelper.js" type="text/javascript"></script>
+    <script src="scripts/dateFormat.min.js" type="text/javascript"></script>
     <script src="scripts/indexController.js" type="text/javascript"></script>
     <script src="scripts/bootstrap.min.js" type="text/javascript"></script>
     <script type="text/javascript">
@@ -20,6 +21,12 @@
 <nav class="navbar navbar-default">
     <div class="container-fluid">
         <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Показать меню</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
             <a class="navbar-brand" href="/">Домашняя метеостанция</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">

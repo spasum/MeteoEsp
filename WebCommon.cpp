@@ -26,3 +26,10 @@ String renderSsid(WiFiData data)
 {
     return String("<div class='ssid'><span class='label label-success selector' ssid='" + data.ssid + "'>" + data.ssid + " (" + data.rssi + " dBm " + (data.encryptionType == ENC_TYPE_NONE ? "" : "*") + ")</span></div>");
 }
+
+String renderMenu(String delay)
+{
+    String text = FPSTR(mainMenu);
+    text.replace("%d", delay);
+    return text;
+}

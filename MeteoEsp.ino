@@ -53,6 +53,7 @@ bool rtcInitialized = false;
 unsigned long previousMillis = 0;
 bool isRebooting = false;
 int currentSensorCycle = 0;
+int currentRebootCycle = 0;
 const int ONE_SECOND = 1000;
 
 //declaration
@@ -94,24 +95,29 @@ void renderHeader()
     myGLCD.print(String("T2,   C:"), 1, getRowY(6, fontHeight));
 }
 
+void handleTimerWhileRebooting()
+{
+    int periods = atoi(config.reboot_delay);
+    if (currentRebootCycle == periods)
+    {
+        ESP.restart();
+        return;
+    }
+
+    myGLCD.print(String("Reboot in ") + String(periods - currentRebootCycle) + " sec(s) ", 1, getRowY(0, fontHeight));
+    Serial.printf("Reboot ESP in %d sec.\r\n", (periods - currentRebootCycle));
+}
+
 void rebootESP()
 {
     myGLCD.setColor(0, 0, 0);
     myGLCD.fillRect(0, 0, width, height);
     myGLCD.setColor(255, 255, 255);
 
-    int periods = atoi(config.reboot_delay); // how many times will change the text
-    for (int i = 0; i < periods; i++)
-    {
-        myGLCD.print(String("Reboot in ") + String(periods - i) + " sec(s) ", 1, getRowY(0, fontHeight));
-        Serial.printf("Reboot ESP in %d sec.\r\n", (periods - i));
-        delay(ONE_SECOND);
-    }
+    handleTimerWhileRebooting();
 
     //ignore all messages to display while rebooting
     isRebooting = true;
-
-    ESP.restart();
 }
 
 void webRoot()
@@ -119,7 +125,7 @@ void webRoot()
     Serial.println("\r\nServer: request ROOT");
 
     String data = 
-        renderTitle(config.module_name, "Home") + FPSTR(stylesInclude) + FPSTR(scripts) + FPSTR(headEnd) + FPSTR(bodyStart) + FPSTR(mainMenu) +
+        renderTitle(config.module_name, "Home") + FPSTR(stylesInclude) + FPSTR(scripts) + FPSTR(headEnd) + FPSTR(bodyStart) + renderMenu(config.reboot_delay) +
         String(F("<h2>Welcome to ")) + config.module_name + String(F("</h2>")) +
         String(F("<div class='container'>")) +
         renderParameterRow("Module ID", "", config.module_id, true) + 
@@ -220,7 +226,7 @@ void webSetup()
     }
 
     String data = 
-        renderTitle(config.module_name, "Setup") + FPSTR(stylesInclude) + FPSTR(scripts) + FPSTR(headEnd) + FPSTR(bodyStart) + FPSTR(mainMenu) +
+        renderTitle(config.module_name, "Setup") + FPSTR(stylesInclude) + FPSTR(scripts) + FPSTR(headEnd) + FPSTR(bodyStart) + renderMenu(config.reboot_delay) +
         "<h2>Module Setup</h2>" +
         "<div class='container'>" +
         renderParameterRow("Module ID", "module_id", config.module_id) + 
@@ -283,14 +289,30 @@ void webSensors()
         config_changed = true;
     }
 
+    payload = WebServer.arg("reboot_delay");
+    if (payload.length() > 0)
+    {
+        payload.toCharArray(config.reboot_delay, sizeof(config.reboot_delay));
+        config_changed = true;
+    }
+    payload = WebServer.arg("get_data_delay");
+    if (payload.length() > 0)
+    {
+        payload.toCharArray(config.get_data_delay, sizeof(config.get_data_delay));
+        config_changed = true;
+    }
+
     String data = 
-        renderTitle(config.module_name, "Setup") + FPSTR(stylesInclude) + FPSTR(scripts) + FPSTR(headEnd) + FPSTR(bodyStart) + FPSTR(mainMenu) +
+        renderTitle(config.module_name, "Setup") + FPSTR(stylesInclude) + FPSTR(scripts) + FPSTR(headEnd) + FPSTR(bodyStart) + renderMenu(config.reboot_delay) +
         "<h2>Module Sensors</h2>" +
         "<div class='container'>" +
         renderParameterRow("BMP180 On", "sensor_bmp180_on", config.sensor_bmp180_on) + 
         renderParameterRow("DHT22 On", "sensor_dht22_on", config.sensor_dht22_on) + 
         renderParameterRow("SHT21 On", "sensor_sht21_on", config.sensor_sht21_on) + 
         renderParameterRow("BH1750 On", "sensor_bh1750_on", config.sensor_bh1750_on) + 
+        "<hr/>" +
+        renderParameterRow("Reboot Delay, sec", "reboot_delay", config.reboot_delay) + 
+        renderParameterRow("Sensors Delay, sec", "get_data_delay", config.get_data_delay) + 
         "<hr/>" +
         "<a class='btn btn-default marginTop0' role='button' onclick='saveFormData(\"/sensors\");'>Save</a>" +
         "</div>" +
@@ -311,9 +333,8 @@ void webReboot()
     Serial.println("\r\nServer: request REBOOT");
 
     String data =
-        renderTitle(config.module_name, "Reboot") + 
-        renderStyles(String("") + FPSTR(styles) + FPSTR(stylesBootstrapAlerts)) +
-        FPSTR(rebootScripts) + FPSTR(scripts) + FPSTR(headEnd) + FPSTR(bodyStart) + FPSTR(mainMenu) +
+        renderTitle(config.module_name, "Reboot") + FPSTR(stylesInclude) +
+        FPSTR(rebootScripts) + FPSTR(scripts) + FPSTR(headEnd) + FPSTR(bodyStart) + renderMenu(config.reboot_delay) +
         renderAlert("info", String("<strong id='info'>Module will reboot in ") + config.reboot_delay + " second(s).</strong>") +
         FPSTR(bodyEnd);
 
@@ -321,7 +342,6 @@ void webReboot()
 
     Serial.println("Server: request REBOOT sent");
 
-    delay(1000);
     rebootESP();
 }
 
@@ -419,7 +439,7 @@ void webTime()
     }
 
     String data =
-        renderTitle(config.module_name, "Setup Time") + FPSTR(stylesInclude) + FPSTR(scripts) + FPSTR(headEnd) + FPSTR(bodyStart) + FPSTR(mainMenu) +
+        renderTitle(config.module_name, "Setup Time") + FPSTR(stylesInclude) + FPSTR(scripts) + FPSTR(headEnd) + FPSTR(bodyStart) + renderMenu(config.reboot_delay) +
         "<h2>Module Time</h2>" +
         "<div class='container'>" +
         renderParameterRow("RTC On", "rtc_on", config.rtc_on, false) + 
@@ -460,7 +480,7 @@ void handleNotFound()
     Serial.println("\r\nServer: not found");
 
     String data =
-        renderTitle(config.module_name, "Page not found") + FPSTR(stylesInclude) + FPSTR(headEnd) + FPSTR(bodyStart) + FPSTR(mainMenu) +
+        renderTitle(config.module_name, "Page not found") + FPSTR(stylesInclude) + FPSTR(headEnd) + FPSTR(bodyStart) + renderMenu(config.reboot_delay) +
         renderAlert("danger", String("Page <strong>") + WebServer.uri() + "</strong> not found.") +
         FPSTR(bodyEnd);
 
@@ -691,7 +711,10 @@ void initRtc()
 void setup()
 {
     Serial.begin(115200);
+
     isRebooting = false;
+    currentSensorCycle = 0;
+    currentRebootCycle = 0;
 
     Serial.println("\r\nStarting module...");
 
@@ -855,11 +878,33 @@ void renderAPStatus(String status, int r, int g, int b)
     renderRowValue(status, 2, r, g, b);
 }
 
-void renderSensorValues()
+void requestSensorValues()
 {
     if (atoi(config.sensor_dht22_on) == 1)
     {
         data1 = getDht22Data();
+    }
+
+    if (atoi(config.sensor_bmp180_on) == 1)
+    {
+        data2 = getBmp180Data();
+    }
+
+    if (atoi(config.sensor_sht21_on) == 1)
+    {
+        data3 = getSht21Data();
+    }
+
+    if (atoi(config.sensor_bh1750_on) == 1)
+    {
+        lightness = getLightness();
+    }
+}
+
+void renderSensorValues()
+{
+    if (atoi(config.sensor_dht22_on) == 1)
+    {
         data1.tempStr = floatToString(data1.temp, VALUE_TEMP);
         data1.humidityStr = floatToString(data1.humidity, VALUE_HUMIDITY);
         data1.pressureStr = floatToString(data1.pressure * 0.0295333727 * 25.4, VALUE_PRESSURE, 3, 0);
@@ -872,7 +917,6 @@ void renderSensorValues()
 
     if (atoi(config.sensor_bmp180_on) == 1)
     {
-        data2 = getBmp180Data();
         data2.tempStr = floatToString(data2.temp, VALUE_TEMP);
         data2.humidityStr = floatToString(data2.humidity, VALUE_HUMIDITY);
         data2.pressureStr = floatToString(data2.pressure * 0.0295333727 * 25.4, VALUE_PRESSURE, 3, 0);
@@ -885,7 +929,6 @@ void renderSensorValues()
 
     if (atoi(config.sensor_sht21_on) == 1)
     {
-        data3 = getSht21Data();
         data3.tempStr = floatToString(data3.temp, VALUE_TEMP);
         data3.humidityStr = floatToString(data3.humidity, VALUE_HUMIDITY);
         data3.pressureStr = floatToString(data3.pressure * 0.0295333727 * 25.4, VALUE_PRESSURE, 3, 0);
@@ -896,7 +939,6 @@ void renderSensorValues()
 
     if (atoi(config.sensor_bh1750_on) == 1)
     {
-        lightness = getLightness();
         lightnessStr = floatToString(lightness, VALUE_ILLUMINATION, 5, 0);
         Serial.println(String("Light     : " + lightnessStr));
     }
@@ -990,9 +1032,9 @@ String getSensorsDataJson()
 
     json["illumination"] = getIlluminationForJson(lightness);
 
-    json["meet"] = 1;
     json["ip"] = getIpString(WiFi.localIP());
     json["mac"] = getMacString();
+    json["delay"] = config.get_data_delay;
 
     char buffer[2048];
     json.printTo(buffer, sizeof(buffer));
@@ -1000,7 +1042,7 @@ String getSensorsDataJson()
     return String(buffer);
 }
 
-void saveSensorsData()
+void sendSensorsData()
 {
     Serial.println("\r\nHTTPClient: starting");
 
@@ -1051,15 +1093,24 @@ void loop()
     {
         currentSensorCycle++;
         previousMillis = currentMillis;
-        renderDateTime();
-        
-        if (currentSensorCycle % atoi(config.get_data_delay) == 0)
+
+        if (isRebooting)
         {
-            Serial.println("\r\nGetting sensors data...");
-            renderSensorValues();
-            if (WiFi.status() == WL_CONNECTED)
+            currentRebootCycle++;
+            handleTimerWhileRebooting();
+        }
+        else
+        {
+            renderDateTime();        
+            if (currentSensorCycle % atoi(config.get_data_delay) == 0)
             {
-                saveSensorsData();
+                Serial.println("\r\nGetting sensors data...");
+                requestSensorValues();
+                renderSensorValues();
+                if (WiFi.status() == WL_CONNECTED)
+                {
+                    sendSensorsData();
+                }
             }
         }
     }

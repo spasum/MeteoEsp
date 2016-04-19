@@ -11,7 +11,7 @@ const char mainMenu[] PROGMEM = "<div class='header'><ul>\
 <li><a href='/setup'>Setup</a></li>\
 <li><a href='/time'>Time</a></li>\
 <li><a href='/sensors'>Sensors</a></li>\
-<li><a class='reboot' href='/reboot?reboot_delay=10'>Reboot</a></li>\
+<li><a class='reboot' href='/reboot?reboot_delay=%d'>Reboot</a></li>\
 </ul></div>";
 
 const char stylesBootstrap[] PROGMEM =
@@ -158,6 +158,7 @@ String renderTitle(String pageName, String moduleName);
 String renderAlert(String type, String text);
 String renderStyles(String styles);
 String renderSsid(WiFiData data);
+String renderMenu(String delay);
 
 #endif
 
