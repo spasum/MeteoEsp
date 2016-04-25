@@ -273,3 +273,11 @@ hr {
 .inactiveModuleWidget {
     opacity: 0.5;
 }
+
+.jq-dropdown-disabled, .jq-dropdown-disabled:after {
+    color: #c0c4c8 !important;
+}
+
+.panel-title>a {
+    text-decoration: none !important;
+}

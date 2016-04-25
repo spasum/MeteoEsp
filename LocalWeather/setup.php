@@ -44,10 +44,13 @@
     </div>
 </nav>
 
-<div class="pageContainer">
-</div>
+<div class="pageContainer" id="pageContainer"></div>
 
 <script type="text/javascript">
+    var setupPage;
+    $(document).ready(function() {
+        setupPage = setupController();
+    });
 </script>
 
 </body>

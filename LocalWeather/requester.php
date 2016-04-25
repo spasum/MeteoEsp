@@ -128,9 +128,9 @@ class Requester
 
         if ($params->queryType == "all") {
             $rowsToSkip = $params->pageIndex * $params->pageSize;
-            $query = "SELECT SQL_CALC_FOUND_ROWS * FROM WeatherData ORDER BY $params->sortBy $params->sortAscending LIMIT $rowsToSkip, $params->pageSize";
+            $query = "SELECT SQL_CALC_FOUND_ROWS wd.*, wm.Description FROM WeatherData wd JOIN WeatherModule wm ON wm.ModuleID = wd.ModuleID ORDER BY $params->sortBy $params->sortAscending LIMIT $rowsToSkip, $params->pageSize";
         } else {
-            $query = "SELECT * FROM WeatherData WHERE DATE_SUB(NOW(), INTERVAL $params->interval) < MeasuredDateTime";
+            $query = "SELECT wd.* FROM WeatherData wd WHERE DATE_SUB(NOW(), INTERVAL $params->interval) < MeasuredDateTime";
         }
 
         $queryRowsCount = "SELECT FOUND_ROWS()";

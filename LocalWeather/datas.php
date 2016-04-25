@@ -49,6 +49,26 @@
 </nav>
 
 <div class="pageContainer">
+
+    <div class="panel-group">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a data-toggle="collapse" href="#collapse1">Настроить параметры фильтрации &#8595;</a>
+                </h4>
+            </div>
+            <div id="collapse1" class="panel-collapse collapse">
+                <div class="panel-body">
+                    <span class="example" data-jq-dropdown="#jq-dropdown-2">Фильтр данных</span>
+                    <div id="jq-dropdown-2" class="jq-dropdown jq-dropdown-tip">
+                        <ul class="jq-dropdown-menu" id="modulesFilterMenu">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="results"></div>
     <div id="pager"></div>
 

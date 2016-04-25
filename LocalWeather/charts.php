@@ -57,7 +57,7 @@
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h4 class="panel-title">
-                    <a data-toggle="collapse" href="#collapse1">Настроить параметры построения</a>
+                    <a data-toggle="collapse" href="#collapse1">Настроить параметры построения &#8595;</a>
                 </h4>
             </div>
             <div id="collapse1" class="panel-collapse collapse">
