@@ -52,36 +52,49 @@
 </nav>
 
 <div class="pageContainer">
-    <div class="verticalPanel" style="width: 250px;">
 
-        <div id="moduleController"></div>
-        <div id="jq-dropdown-1" class="jq-dropdown jq-dropdown-tip">
-            <ul class="jq-dropdown-menu" id="modulesMenu">
-            </ul>
+    <div class="panel-group">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a data-toggle="collapse" href="#collapse1">Настроить параметры построения</a>
+                </h4>
+            </div>
+            <div id="collapse1" class="panel-collapse collapse">
+                <div class="panel-body">
+
+                    <div id="moduleController"></div>
+                    <div id="jq-dropdown-1" class="jq-dropdown jq-dropdown-tip">
+                        <ul class="jq-dropdown-menu" id="modulesMenu">
+                        </ul>
+                    </div>
+
+                    <hr/>
+
+                    <div id="chartController"></div>
+                    <div id="jq-dropdown-2" class="jq-dropdown jq-dropdown-tip">
+                        <ul class="jq-dropdown-menu">
+                            <li><a class="intervalItem" data-interval="1 HOUR">1 час</a></li>
+                            <li><a class="intervalItem" data-interval="2 HOUR">2 часа</a></li>
+                            <li><a class="intervalItem" data-interval="4 HOUR">4 часа</a></li>
+                            <li><a class="intervalItem" data-interval="6 HOUR">6 часов</a></li>
+                            <li><a class="intervalItem" data-interval="12 HOUR">12 часов</a></li>
+                            <li><a class="intervalItem" data-interval="1 DAY">1 день</a></li>
+                        </ul>
+                    </div>
+
+                    <hr/>
+
+                    <div id="sensorsList"></div>
+
+                </div>
+            </div>
         </div>
-
-        <hr/>
-
-        <div id="chartController"></div>
-        <div id="jq-dropdown-2" class="jq-dropdown jq-dropdown-tip">
-            <ul class="jq-dropdown-menu">
-                <li><a class="intervalItem" interval="1 HOUR">1 час</a></li>
-                <li><a class="intervalItem" interval="2 HOUR">2 часа</a></li>
-                <li><a class="intervalItem" interval="4 HOUR">4 часа</a></li>
-                <li><a class="intervalItem" interval="6 HOUR">6 часов</a></li>
-                <li><a class="intervalItem" interval="12 HOUR">12 часов</a></li>
-                <li><a class="intervalItem" interval="1 DAY">1 день</a></li>
-            </ul>
-        </div>
-
-        <hr/>
-
-        <div id="sensorsList"></div>
-
     </div>
-    <div class="verticalPanel">
-        <div id="chart" class="chartArea"></div>
+
+    <div id="chartsContainer">
     </div>
+
 </div>
 
 <script type="text/javascript">

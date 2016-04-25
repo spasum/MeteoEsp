@@ -12,6 +12,25 @@ body {
     border-color: #2A2D35 !important;
 }
 
+.panel {
+    background: #3D3F48 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    border-color: #484c5a !important;
+}
+
+.panel-default>.panel-heading+.panel-collapse>.panel-body {
+    border-top-color: #484c5a !important;
+}
+
+.panel-default>.panel-heading {
+    background: #2A2D35 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    color: #c0c4c8 !important;
+    font-size: 14px !important;
+}
+
 .navbar-default .navbar-nav>li>a {
     color: #c0c4c8 !important;
 }
@@ -34,7 +53,7 @@ body {
 
 .thumbnail {
     background: #3D3F48 !important;
-    border-color: #3D3F48 !important;
+    border-color: #484c5a !important;
     border-radius: 0 !important;
 }
 
@@ -92,12 +111,6 @@ hr {
 .pageContainer {
     padding-left: 20px;
     padding-right: 20px;
-}
-
-.verticalPanel {
-    display: inline-block;
-    padding-right: 20px;
-    vertical-align: top;
 }
 
 .fieldsContainer {
@@ -251,7 +264,12 @@ hr {
     background-position: -6px -6px;
 }
 
-.chartArea {
-    height: 500px;
-    width: 1000px;
+.chartContainer {
+}
+
+.sensorWidget {
+}
+
+.inactiveModuleWidget {
+    opacity: 0.5;
 }
