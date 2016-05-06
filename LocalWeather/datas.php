@@ -12,6 +12,8 @@
     <link rel="stylesheet" href="styles/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="styles/jquery.dropdown.min.css" type="text/css" />
     <link rel="stylesheet" href="styles/bootstrap-theme.min.css" type="text/css" />
+    <link rel="stylesheet" href="styles/font-awesome.css" type="text/css" />
+    <link rel="stylesheet" href="styles/awesome-bootstrap-checkbox.css" type="text/css" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js" type="text/javascript"></script>
     <script src="scripts/CommonUtil.js" type="text/javascript"></script>
     <script src="scripts/queryHelper.js" type="text/javascript"></script>
@@ -60,11 +62,7 @@
             </div>
             <div id="collapse1" class="panel-collapse collapse">
                 <div class="panel-body">
-                    <span class="example" data-jq-dropdown="#jq-dropdown-2">Фильтр данных</span>
-                    <div id="jq-dropdown-2" class="jq-dropdown jq-dropdown-tip">
-                        <ul class="jq-dropdown-menu" id="modulesFilterMenu">
-                        </ul>
-                    </div>
+                    <div id="sensorsList"></div>
                 </div>
             </div>
         </div>
