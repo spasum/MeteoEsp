@@ -7,6 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="#2A2D35"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>Домашняя метеостанция - Данные</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
     <link rel="stylesheet" href="styles/styles.css" type="text/css" />
     <link rel="stylesheet" href="styles/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="styles/jquery.dropdown.min.css" type="text/css" />
