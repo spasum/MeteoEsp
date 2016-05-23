@@ -43,4 +43,9 @@ var queryHelper = new function() {
         request("queryWeatherData.php", params, callback);
     }
     thisRef.requestWeatherData = requestWeatherData;
+
+    function requestUserData(params, callback) {
+        request("queryUserData.php", params, callback);
+    }
+    thisRef.requestUserData = requestUserData;
 };
