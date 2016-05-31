@@ -60,7 +60,6 @@ const int ONE_SECOND = 1000;
 void renderWiFiStatus(String status, int r, int g, int b);
 void renderServerStatus(String status, int r, int g, int b);
 void renderAPStatus(String status, int r, int g, int b);
-void scanWiFi();
 
 bool isRtcInitialized()
 {
@@ -216,15 +215,6 @@ void webSetup()
         config_changed = true;
     }
 
-    scanWiFi();
-
-    String ssids;
-    for (int i = 0; i < MAX_WIFI_COUNT; i++)
-    {
-        if (wiFiDatas[i].isSet)
-            ssids += renderSsid(wiFiDatas[i]);
-    }
-
     String data = 
         renderTitle(config.module_name, "Setup") + FPSTR(stylesInclude) + FPSTR(scripts) + FPSTR(headEnd) + FPSTR(bodyStart) + renderMenu(config.reboot_delay) +
         "<h2>Module Setup</h2>" +
@@ -232,9 +222,6 @@ void webSetup()
         renderParameterRow("Module ID", "module_id", config.module_id) + 
         renderParameterRow("Module Name", "module_name", config.module_name) + 
         "<hr/>" +
-        "<div class='container_ssids'><h4>Available Networks:</h4>" +
-        ssids +
-        "</div>" +
         renderParameterRow("SSID", "sta_ssid", config.sta_ssid) + 
         renderParameterRow("Password", "sta_pwd", config.sta_pwd, false, true) + 
         "<hr/>" +
@@ -499,42 +486,6 @@ void initWebServer()
     WebServer.onNotFound(handleNotFound);
     WebServer.begin();
     Serial.println("Server: started");
-}
-
-void scanWiFi()
-{
-    Serial.println("WiFi: scan start");  
-
-    for (int i = 0; i < MAX_WIFI_COUNT; i++)
-    {
-        wiFiDatas[i].isSet = false;
-    }
-
-    int founds = WiFi.scanNetworks();
-    
-    Serial.println("WiFi: scan done");
-  
-    if (founds == 0)
-    {
-        Serial.println("WiFi: no networks found");
-    }
-    else
-    {
-        Serial.print("WiFi: ");
-        Serial.print(founds);
-        Serial.println(F(" networks found"));
-        for (size_t i = 0; i < founds; ++i)
-        {
-            // Print SSID and RSSI for each network found
-            Serial.print(i + 1);  Serial.print(F(": "));  Serial.print(WiFi.SSID(i));  Serial.print(F(" ("));  Serial.print(WiFi.RSSI(i));  Serial.print(F(" dBm)"));
-            Serial.println((WiFi.encryptionType(i) == ENC_TYPE_NONE) ? F(" ") : F("*"));
-            wiFiDatas[i].ssid = WiFi.SSID(i);
-            wiFiDatas[i].rssi = WiFi.RSSI(i);
-            wiFiDatas[i].encryptionType = WiFi.encryptionType(i);
-            wiFiDatas[i].isSet = true;
-            delay(10);
-        }
-    }
 }
 
 int connectWiFi()

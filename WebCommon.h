@@ -41,13 +41,6 @@ box-shadow: inset 0 1px 0 rgba(255,255,255,.15),0 1px 1px rgba(0,0,0,.075);}\
 background-image: -o-linear-gradient(top,#fff 0,#e0e0e0 100%); background-image: -webkit-gradient(linear,left top,left bottom,from(#fff),to(#e0e0e0));\
 background-image: linear-gradient(to bottom,#fff 0,#e0e0e0 100%); filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffffff', endColorstr='#ffe0e0e0', GradientType=0);\
 background-repeat: repeat-x; border-color: #dbdbdb; }\
-.label { display: inline; padding: .2em .6em .3em; font-size: 75%; font-weight: 700; line-height: 1; color: #fff; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: .25em; }\
-.label-default { background-color: #777; }\
-.label-primary { background-color: #337ab7; }\
-.label-success { background-color: #5cb85c; }\
-.label-info { background-color: #5bc0de; }\
-.label-warning { background-color: #f0ad4e; }\
-.label-danger { background-color: #d9534f; }\
 ";
 
 const char stylesBootstrapAlerts[] PROGMEM = "\
@@ -72,9 +65,6 @@ const char styles[] PROGMEM =
 .header ul li a:hover {color: #007acc;}\
 .reboot {color: red !important;}\
 .container {border: 1px solid #ddd; width: 400px; border-radius: 4px;}\
-.container_ssids {border: 1px solid #ddd; width: 370px; border-radius: 4px; padding-left: 10px; margin-bottom: 10px; margin-left: 10px;}\
-.ssid {height: 25px;}\
-.selector {cursor: pointer;}\
 ";
 
 const char rebootScripts[] PROGMEM =
