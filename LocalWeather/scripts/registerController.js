@@ -81,19 +81,22 @@ var registerController = function(params) {
         queryHelper.requestUserData({ action: "register", email: email, password: password }, registerUserCallback);
     }
 
+    function switchToValidationMode() {
+        codePanel.style.display = "";
+        codeField.focus();
+
+        validationPanel.style.display = "";
+        usernamePanel.style.display = passwordPanel.style.display = registerPanel.style.display = "none";
+
+        btnRegister.type = "button";
+    }
+
     function registerUserCallback(payload) {
         errorPane.style.visibility = "visible";
 
         if (payload.result === true) {
             errorPane.innerHTML = "На указанный e-mail отправлен проверочный код. Введите полученный код для окончания регистрации.";
-
-            codePanel.style.display = "";
-            codeField.focus();
-
-            validationPanel.style.display = "";
-            usernamePanel.style.display = passwordPanel.style.display = registerPanel.style.display = "none";
-
-            btnRegister.type = "button";
+            switchToValidationMode();
         } else {
             disableForm(false);
             if (payload.alreadyRegistered) {
@@ -131,7 +134,13 @@ var registerController = function(params) {
 
     function init() {
         initData();
-        userNameField.focus();
+
+        if (!isStringEmpty(codeField.value)) {
+            switchToValidationMode();
+        } else {
+            userNameField.focus();
+        }
+
         btnRegister.onclick = doLogin;
         btnValidate.onclick = validateCode;
     }

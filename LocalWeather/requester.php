@@ -1,7 +1,10 @@
 <?php
 
 include_once("dbconfig.php");
+include_once("emailConfig.php");
 include_once("lib/password.php");
+
+require 'lib/PHPMailer/PHPMailerAutoload.php';
 
 class Requester
 {
@@ -222,6 +225,7 @@ class Requester
         global $databaseName;
         global $databaseLogin;
         global $databasePassword;
+        global $hostAddress;
 
         $link = mysql_connect($databaseHost, $databaseLogin, $databasePassword)
             or die("Could not connect : " . mysql_error());
@@ -238,10 +242,45 @@ class Requester
             or die("Query failed: " . mysql_error());
 
         $id = mysql_insert_id();
-
         mysql_close($link);
 
+        $href = "$hostAddress/register.php?code=$code";
+        $this->sendEmail($email, "Регистрация на сайте Домашней метеостанции",
+            "Для окончания регистрации перейдите по ссылке: <a href='$href'>$href</a> или вставьте проверочный код<br/><b>$code</b><br/>в поле ввода.");
+
         return $id;
+    }
+
+    private function sendEmail($to, $subject, $text) {
+
+        global $emailLogin;
+        global $emailPassword;
+        global $emailServer;
+        global $emailFrom;
+
+        $mail = new PHPMailer;
+
+        $mail->isSMTP();                                      // Set mailer to use SMTP
+        $mail->Host = $emailServer;                           // Specify main and backup SMTP servers
+        $mail->SMTPAuth = true;                               // Enable SMTP authentication
+        $mail->Username = $emailLogin;                        // SMTP username
+        $mail->Password = $emailPassword;                     // SMTP password
+        $mail->Port = 25;                                     // TCP port to connect to
+
+        $mail->setFrom($emailFrom, 'Домашняя метеостанция');
+        $mail->addAddress($to, $to);                          // Add a recipient
+
+        $mail->isHTML(true);                                  // Set email format to HTML
+
+        $mail->Subject = $subject;
+        $mail->Body    = $text;
+        $mail->CharSet = 'utf-8';
+
+        if(!$mail->send()) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
 }

@@ -1,3 +1,11 @@
+<?php
+
+$code = $_REQUEST["code"];
+if (isset($code)) {
+
+}
+
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -37,7 +45,7 @@
                     </div>
                     <div class="form-group input-group" id="codePanel" style="display: none;">
                         <span class="input-group-addon"><i class="glyphicon glyphicon-check"></i></span>
-                        <input class="form-control" type="text" id="code" name='code' placeholder="проверочный код"/>
+                        <input class="form-control" type="text" value="<?=$code?>" id="code" name='code' placeholder="проверочный код"/>
                     </div>
                     <div class="form-group" id="registerPanel">
                         <button type="submit" id="btnRegister" class="btn btn-primary btn-block">Регистрация</button>
