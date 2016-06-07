@@ -22,6 +22,7 @@
     <script src="scripts/bootstrap.min.js" type="text/javascript"></script>
     <script src="scripts/dateFormat.min.js" type="text/javascript"></script>
     <script type="text/javascript" src="scripts/jquery.dropdown.min.js"></script>
+    <script type="text/javascript" src="scripts/kalmanFilter.js"></script>
     <script type="text/javascript">
         var timerStart = Date.now();
     </script>
