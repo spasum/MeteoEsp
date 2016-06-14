@@ -17,7 +17,7 @@
     <script src="scripts/queryHelper.js" type="text/javascript"></script>
     <script src="scripts/setupController.js" type="text/javascript"></script>
     <script src="scripts/bootstrap.min.js" type="text/javascript"></script>
-    <script src="scripts/dateFormat.min.js" type="text/javascript"></script>
+    <script src="scripts/dateFormat.js" type="text/javascript"></script>
     <script type="text/javascript" src="scripts/jquery.dropdown.min.js"></script>
     <script type="text/javascript">
         var timerStart = Date.now();
@@ -48,6 +48,25 @@
         </div>
     </div>
 </nav>
+
+<div id="editModuleModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title" id="moduleModalTitle">Modal Header</h4>
+            </div>
+            <div class="modal-body">
+                <p>Some text in the modal.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="btnSaveModule">Сохранить</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="pageContainer" id="pageContainer"></div>
 

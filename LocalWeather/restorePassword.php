@@ -27,6 +27,9 @@
         <div class="absolute-center is-responsive">
             <div class="col-sm-12 col-md-12">
                 <form method="post" id="loginForm">
+                    <div class="form-group text-center">
+                        <img src="images/home-icon.png" height="128" width="128" />
+                    </div>
                     <div class="form-group input-group">
                         <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
                         <input class="form-control" type="text" id="username" name='username' placeholder="e-mail"/>

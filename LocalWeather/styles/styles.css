@@ -106,6 +106,10 @@ hr {
     background: #2E3139 !important;
 }
 
+.modal-content {
+    background: #3D3F48 !important;
+}
+
 /* end bootstrap override */
 
 .pageContainer {
@@ -294,4 +298,10 @@ hr {
     min-width: 200px;
     max-width: 400px;
     padding: 40px;
+}
+
+.glyphicon-text {
+    font-size: 24px;
+    margin-right: 20px;
+    cursor: pointer;
 }
