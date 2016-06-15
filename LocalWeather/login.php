@@ -41,7 +41,7 @@
                         <input class="form-control" type="password" id="password" name='password' placeholder="пароль"/>
                     </div>
                     <div class="checkbox checkbox-primary">
-                        <input id="rememberme" name="rememberme" type="checkbox" class="styled" checked="">
+                        <input id="rememberme" name="rememberme" type="checkbox" class="styled" checked="" />
                         <label for="rememberme">Запомнить меня</label>
                     </div>
                     <div class="form-group">

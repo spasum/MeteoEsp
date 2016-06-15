@@ -58,7 +58,22 @@
                 <h4 class="modal-title" id="moduleModalTitle">Modal Header</h4>
             </div>
             <div class="modal-body">
-                <p>Some text in the modal.</p>
+                <div class="form-group row">
+                    <label for="inputDescription" class="col-sm-2 form-control-label">Описание:</label>
+                    <div class="col-sm-10">
+                        <input class="form-control" id="inputDescription" placeholder="Описание модуля" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-2">&nbsp;</label>
+                    <div class="col-sm-10">
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" id="inputActive" /> Модуль активен
+                            </label>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal" id="btnSaveModule">Сохранить</button>
@@ -66,6 +81,7 @@
             </div>
         </div>
     </div>
+    <input id="inputMAC" type="hidden" />
 </div>
 
 <div class="pageContainer" id="pageContainer"></div>

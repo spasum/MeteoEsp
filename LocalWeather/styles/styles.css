@@ -110,6 +110,10 @@ hr {
     background: #3D3F48 !important;
 }
 
+.form-control-label {
+    margin-top: 7px;
+}
+
 /* end bootstrap override */
 
 .pageContainer {

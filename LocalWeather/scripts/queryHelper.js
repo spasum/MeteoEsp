@@ -39,6 +39,11 @@ var queryHelper = new function() {
     }
     thisRef.requestModuleData = requestModuleData;
 
+    function updateModuleData(params, callback) {
+        request("updateModuleData.php", params, callback);
+    }
+    thisRef.updateModuleData = updateModuleData;
+
     function requestWeatherData(params, callback) {
         request("queryWeatherData.php", params, callback);
     }
