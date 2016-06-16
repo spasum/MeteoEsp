@@ -188,6 +188,10 @@ hr {
     background-color: #2E3139;
 }
 
+#results .noData {
+    background-color: #2E3139 !important;
+}
+
 .pager {
     height: 38px;
     width: 40px;
@@ -308,4 +312,11 @@ hr {
     font-size: 24px;
     margin-right: 20px;
     cursor: pointer;
+}
+
+.jumboMessage {
+    font-size: 20px;
+    font-weight: 200;
+    text-align: center;
+    margin-top: 50px;
 }

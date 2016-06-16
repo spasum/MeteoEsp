@@ -85,6 +85,7 @@
 </div>
 
 <div class="pageContainer" id="pageContainer"></div>
+<p class="jumboMessage" id="jumboMessage">Здесь будут отображаться карточки модулей, подключенных к Домашней метеостанции.</p>
 
 <script type="text/javascript">
     var setupPage;
