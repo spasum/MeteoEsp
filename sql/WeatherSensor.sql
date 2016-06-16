@@ -1,27 +1,3 @@
--- phpMyAdmin SQL Dump
--- version 4.3.12
--- http://www.phpmyadmin.net
---
--- Host: localhost
--- Generation Time: Apr 20, 2016 at 09:11 PM
--- Server version: 5.5.35-33.0-log
--- PHP Version: 5.4.39
-
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-SET time_zone = "+00:00";
-
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8 */;
-
---
--- Database: `host1402357`
---
-
--- --------------------------------------------------------
-
 --
 -- Table structure for table `WeatherSensor`
 --
@@ -29,24 +5,29 @@ SET time_zone = "+00:00";
 CREATE TABLE IF NOT EXISTS `WeatherSensor` (
   `ID` int(11) NOT NULL,
   `SensorName` varchar(50) NOT NULL,
-  `ChartVisibility` int(11) DEFAULT '1'
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8;
+  `ChartVisibility` bit(1) DEFAULT b'1',
+  `TableVisibility` bit(1) DEFAULT b'1',
+  `Description` varchar(50) DEFAULT NULL,
+  `Units` varchar(50) DEFAULT NULL,
+  `ChartTitle` varchar(50) DEFAULT NULL
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `WeatherSensor`
 --
 
-INSERT INTO `WeatherSensor` (`ID`, `SensorName`, `ChartVisibility`) VALUES
-(3, 'Temperature1', 0),
-(4, 'Temperature2', 0),
-(5, 'Temperature3', 1),
-(6, 'Humidity1', 1),
-(7, 'Humidity2', 0),
-(8, 'Humidity3', 1),
-(9, 'Pressure1', 0),
-(10, 'Pressure2', 0),
-(11, 'Pressure3', 0),
-(12, 'Illumination', 1);
+INSERT INTO `WeatherSensor` VALUES
+(3, 'Temperature1', b'1', b'1', 'Температура 1', '°C', 'Температура (°C)'),
+(4, 'Temperature2', b'1', b'1', 'Температура 2', '°C', 'Температура (°C)'),
+(5, 'Temperature3', b'0', b'1', 'Температура 3', '°C', 'Температура (°C)'),
+(6, 'Humidity1', b'1', b'1', 'Влажность 1', '%', 'Относительная влажность (%)'),
+(7, 'Humidity2', b'0', b'1', 'Влажность 2', '%', 'Относительная влажность (%)'),
+(8, 'Humidity3', b'0', b'1', 'Влажность 3', '%', 'Относительная влажность (%)'),
+(9, 'Pressure1', b'0', b'1', 'Давление 1', 'mmHg', 'Атмосферное давление (mmHg)'),
+(10, 'Pressure2', b'1', b'1', 'Давление 2', 'mmHg', 'Атмосферное давление (mmHg)'),
+(11, 'Pressure3', b'0', b'1', 'Давление 3', 'mmHg', 'Атмосферное давление (mmHg)'),
+(12, 'Illumination', b'0', b'1', 'Освещенность', 'lx', 'Освещенность (lx)'),
+(13, 'CO2', b'0', b'1', 'Уровень CO2', 'ppm', 'Уровень CO2');
 
 --
 -- Indexes for dumped tables
@@ -66,7 +47,4 @@ ALTER TABLE `WeatherSensor`
 -- AUTO_INCREMENT for table `WeatherSensor`
 --
 ALTER TABLE `WeatherSensor`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=13;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=15;
