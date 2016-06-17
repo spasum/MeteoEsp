@@ -49,6 +49,7 @@ $humidity3 = valueOrNull((float)getParam($object, "humidity3"));
 $pressure3 = valueOrNull((float)getParam($object, "pressure3"));
 
 $illumination = valueOrNull((float)getParam($object, "illumination"));
+$co2level = valueOrNull((float)getParam($object, "co2"));
 
 if ($moduleid == 0) {
     $data = array(
@@ -68,7 +69,7 @@ try {
     return;
 }
 
-$sql = "INSERT INTO WeatherData (ModuleID, ModuleName, Temperature1, Temperature2, Temperature3, Humidity1, Humidity2, Humidity3, Pressure1, Pressure2, Pressure3, Illumination) VALUES ($moduleid, '$modulename', $temperature1, $temperature2, $temperature3, $humidity1, $humidity2, $humidity3, $pressure1, $pressure2, $pressure3, $illumination)";
+$sql = "INSERT INTO WeatherData (ModuleMAC, Temperature1, Temperature2, Temperature3, Humidity1, Humidity2, Humidity3, Pressure1, Pressure2, Pressure3, Illumination, CO2) VALUES ('$mac', $temperature1, $temperature2, $temperature3, $humidity1, $humidity2, $humidity3, $pressure1, $pressure2, $pressure3, $illumination, $co2level)";
 try {
     mysql_select_db($databaseName);
     mysql_query($sql);
@@ -117,6 +118,7 @@ $data = array(
     'pressure2' => $pressure2,
     'pressure3' => $pressure3,
     'illumination' => $illumination,
+    'co2' => $co2level,
     'year' => (int)date('Y'),
     'month' => (int)date('m'),
     'day' => (int)date('d'),

@@ -455,7 +455,12 @@ var DateFormat = {};
                     return 'минуту назад';
                 } else if (diff < 3600) {
                     var min = Math.floor(diff / 60);
-                    switch (min) {
+                    if (min == 11 || min == 12 || min == 13 || min == 14)
+                        return min + ' минут назад';
+                    var floored = min % 10;
+                    switch (floored) {
+                        case 1:
+                            return min + ' минуту назад';
                         case 2:
                         case 3:
                         case 4:
@@ -466,6 +471,10 @@ var DateFormat = {};
                     return 'час назад';
                 } else if (diff < 86400) {
                     var h = Math.floor(diff / 3600);
+                    if (h == 21)
+                        return h + ' час назад';
+                    if (h == 22 || h == 23)
+                        return h + ' часа назад';
                     switch (h) {
                         case 2:
                         case 3:

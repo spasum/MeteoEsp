@@ -39,6 +39,9 @@ SFE_BMP180 bmp180;
 #define ALTITUDE 20 //meters
 SensorData data2;
 
+uint16_t co2ppm;
+String co2ppmStr;
+
 extern uint8_t BigFont[];
 UTFT myGLCD(ILI9341_S5P, 15, 5, 4);
 const int width = 320;
@@ -723,6 +726,37 @@ uint16_t getLightness()
     return lux;
 }
 
+uint16_t getCO2Level()
+{
+    return 0;
+
+    // command to ask for data
+    byte cmd[9] = {0xFF, 0x01, 0x86, 0x00, 0x00, 0x00, 0x00, 0x00, 0x79};
+    char response[9]; // for answer
+  
+    Serial.write(cmd, 9); //request PPM CO2
+    Serial.readBytes(response, 9);
+
+    if (response[0] != 0xFF)
+    {
+        Serial.println("CO2: Wrong starting byte from co2 sensor!");
+        return -1;
+    }
+  
+    if (response[1] != 0x86)
+    {
+        Serial.println("CO2: Wrong command from co2 sensor!");
+        return -1;
+    }
+  
+    int responseHigh = (int) response[2];
+    int responseLow = (int) response[3];
+
+    int ppm = (256 * responseHigh) + responseLow;
+
+    return ppm;
+}
+
 SensorData getBmp180Data()
 {
     char status;
@@ -850,6 +884,8 @@ void requestSensorValues()
     {
         lightness = getLightness();
     }
+
+    co2ppm = getCO2Level();
 }
 
 void renderSensorValues()
@@ -893,6 +929,12 @@ void renderSensorValues()
         lightnessStr = floatToString(lightness, VALUE_ILLUMINATION, 5, 0);
         Serial.println(String("Light     : " + lightnessStr));
     }
+
+    //if (atoi(config.sensor_bh1750_on) == 1)
+    //{
+        co2ppmStr = floatToString(co2ppm, VALUE_ILLUMINATION, 5, 0);
+        Serial.println(String("CO2, ppm  : " + co2ppmStr));
+    //}
 
     if (isRtcInitialized())
         Serial.println(String("RTC       : ") + getDateTimeString(rtc.now()));
@@ -961,6 +1003,11 @@ float getIlluminationForJson(float value)
     return (isnan(value) || value > 50000) ? 0 : value;
 }
 
+float getCO2LevelForJson(float value)
+{
+    return (isnan(value) || value > 5000) ? 0 : value;
+}
+
 String getSensorsDataJson()
 {
     StaticJsonBuffer<1024> jsonBuffer;
@@ -982,6 +1029,8 @@ String getSensorsDataJson()
     json["pressure3"] = getPressureForJson(data3.pressure);
 
     json["illumination"] = getIlluminationForJson(lightness);
+
+    json["co2"] = getCO2LevelForJson(co2ppm);
 
     json["ip"] = getIpString(WiFi.localIP());
     json["mac"] = getMacString();
